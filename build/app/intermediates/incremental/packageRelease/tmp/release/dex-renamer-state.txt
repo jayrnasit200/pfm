@@ -1,0 +1,4 @@
+#Fri Feb 07 22:55:48 GMT 2025
+base.0=/Users/jaynasit/Documents/pfm/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
