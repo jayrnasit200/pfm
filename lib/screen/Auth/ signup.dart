@@ -37,7 +37,7 @@ class _SignupState extends State<Signup> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/api/signup'),
+        Uri.parse('http://127.0.0.1:8000/api/register'),
         body: {
           'name': name,
           'email': email,
@@ -56,6 +56,7 @@ class _SignupState extends State<Signup> {
         );
       } else {
         showError(context, 'Signup failed, try again');
+        // showError(context, 'Signup failed, try again');
       }
     } catch (e) {
       showError(context, 'An error occurred, please try again');

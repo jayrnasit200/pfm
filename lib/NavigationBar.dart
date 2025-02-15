@@ -20,7 +20,7 @@ class _NavigationBarsState extends State<NavigationBars> {
     int _currentIndex = 0;
     if (widget.s == 'home') {
       _currentIndex = 0;
-    } else if (widget.s == 'earning') {
+    } else if (widget.s == 'Earning') {
       _currentIndex = 1;
     } else if (widget.s == 'Spending') {
       _currentIndex = 2;

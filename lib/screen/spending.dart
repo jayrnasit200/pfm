@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 
 class Spending extends StatefulWidget {
   const Spending({super.key});
@@ -24,10 +24,9 @@ class _SpendingState extends State<Spending> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
               _buildCalendar(),
               const SizedBox(height: 20),
-              _buildHealthStats(),
+              Expanded(child: _buildHealthStats()),
             ],
           ),
         ),
@@ -35,7 +34,6 @@ class _SpendingState extends State<Spending> {
     );
   }
 
-  /// **Builds the Calendar Widget**
   Widget _buildCalendar() {
     return TableCalendar(
       firstDay: DateTime.utc(2010, 10, 16),
@@ -51,7 +49,6 @@ class _SpendingState extends State<Spending> {
     );
   }
 
-  /// **Shows the Popup with Date and Input Field**
   void _showDatePopup(BuildContext context, DateTime selectedDate) {
     TextEditingController _amountController = TextEditingController();
     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
@@ -59,23 +56,17 @@ class _SpendingState extends State<Spending> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Enter Spending Details"),
+        title: const Text("Enter Spending Details"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            /// **Date Label**
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                "Selected Date: $formattedDate",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            /// **Text Field for Amount**
+            Text("Selected Date: $formattedDate",
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
             TextField(
               controller: _amountController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: "Enter Amount",
                 border: OutlineInputBorder(),
               ),
@@ -86,7 +77,7 @@ class _SpendingState extends State<Spending> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           ElevatedButton(
             onPressed: () {
@@ -96,37 +87,33 @@ class _SpendingState extends State<Spending> {
               }
               Navigator.pop(context);
             },
-            child: Text("Save"),
+            child: const Text("Save"),
           ),
         ],
       ),
     );
   }
 
-  /// **Dummy Health Stats Widget**
   Widget _buildHealthStats() {
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStatCard('Heart Rate', '24.32 bpm',
-              'Monitoring Hearts, One Beat at a Time.'),
-          _buildStatCard('Heart Rate', '24.32 bpm',
-              'Monitoring Hearts, One Beat at a Time.'),
-        ],
-      ),
+    return ListView(
+      children: [
+        _buildStatCard('Heart Rate', '72 bpm', 'Monitoring your heartbeat.'),
+        _buildStatCard('Steps', '10,500', 'Keeping you active every day.'),
+        _buildStatCard('Calories', '550 kcal', 'Tracking your daily burn.'),
+        _buildStatCard('Sleep', '8 hrs', 'Ensuring restful nights.'),
+      ],
     );
   }
 
-  /// **Reusable Card Widget**
   Widget _buildStatCard(String title, String value, String subtitle) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -134,12 +121,13 @@ class _SpendingState extends State<Spending> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text('View Details', style: TextStyle(color: Colors.blue)),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('View Details', style: TextStyle(color: Colors.blue)),
             ],
           ),
           const SizedBox(height: 5),
-          Text(subtitle, style: TextStyle(color: Colors.grey)),
+          Text(subtitle, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );

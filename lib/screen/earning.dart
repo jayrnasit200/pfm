@@ -1,40 +1,7 @@
-// import 'package:flutter/material.dart';
-// import 'package:pfm/NavigationBar.dart';
-
-// class earning extends StatefulWidget {
-//   const earning({super.key});
-
-//   @override
-//   State<earning> createState() => _earningState();
-// }
-
-// class _earningState extends State<earning> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.lightBlue,
-//       bottomNavigationBar: NavigationBars("earning"),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: <Widget>[
-//             const Text(
-//               'You have pushed the button this many times:',
-//             ),
-//             Text(
-//               'earning ',
-//               style: Theme.of(context).textTheme.headlineMedium,
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 
 class earning extends StatefulWidget {
   const earning({super.key});
@@ -50,17 +17,16 @@ class _earningState extends State<earning> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: NavigationBars("earning"),
+      bottomNavigationBar: NavigationBars("Earning"),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
               _buildCalendar(),
               const SizedBox(height: 20),
-              _buildHealthStats(),
+              Expanded(child: _buildHealthStats()),
             ],
           ),
         ),
@@ -68,7 +34,6 @@ class _earningState extends State<earning> {
     );
   }
 
-  /// **Builds the Calendar Widget**
   Widget _buildCalendar() {
     return TableCalendar(
       firstDay: DateTime.utc(2010, 10, 16),
@@ -84,7 +49,6 @@ class _earningState extends State<earning> {
     );
   }
 
-  /// **Shows the Popup with Date and Input Field**
   void _showDatePopup(BuildContext context, DateTime selectedDate) {
     TextEditingController _amountController = TextEditingController();
     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
@@ -92,23 +56,17 @@ class _earningState extends State<earning> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Enter earning Details"),
+        title: const Text("Enter Earning Details"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            /// **Date Label**
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                "Selected Date: $formattedDate",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            /// **Text Field for Amount**
+            Text("Selected Date: $formattedDate",
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
             TextField(
               controller: _amountController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: "Enter Amount",
                 border: OutlineInputBorder(),
               ),
@@ -119,7 +77,7 @@ class _earningState extends State<earning> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           ElevatedButton(
             onPressed: () {
@@ -129,43 +87,33 @@ class _earningState extends State<earning> {
               }
               Navigator.pop(context);
             },
-            child: Text("Save"),
+            child: const Text("Save"),
           ),
         ],
       ),
     );
   }
 
-  /// **Dummy Health Stats Widget**
   Widget _buildHealthStats() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStatCard('Heart Rate', '24.32 bpm',
-              'Monitoring Hearts, One Beat at a Time.'),
-          _buildStatCard('Steps', '1024', 'Keeping you active and on track.'),
-          _buildStatCard(
-              'Calories', '230 kcal', 'Burning energy for a better you.'),
-          _buildStatCard('Sleep', '7 hrs', 'Ensuring your restful nights.'),
-          _buildStatCard(
-              'Calories', '230 kcal', 'Burning energy for a better you.'),
-          _buildStatCard(
-              'Calories', '230 kcal', 'Burning energy for a better you.'),
-        ],
-      ),
+    return ListView(
+      children: [
+        _buildStatCard('Heart Rate', '72 bpm', 'Monitoring your heartbeat.'),
+        _buildStatCard('Steps', '10,500', 'Keeping you active every day.'),
+        _buildStatCard('Calories', '550 kcal', 'Tracking your daily burn.'),
+        _buildStatCard('Sleep', '8 hrs', 'Ensuring restful nights.'),
+      ],
     );
   }
 
-  /// **Reusable Card Widget**
   Widget _buildStatCard(String title, String value, String subtitle) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -173,12 +121,13 @@ class _earningState extends State<earning> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text('View Details', style: TextStyle(color: Colors.blue)),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('View Details', style: TextStyle(color: Colors.blue)),
             ],
           ),
           const SizedBox(height: 5),
-          Text(subtitle, style: TextStyle(color: Colors.grey)),
+          Text(subtitle, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
