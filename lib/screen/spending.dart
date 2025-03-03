@@ -97,7 +97,7 @@ class _SpendingState extends State<Spending> {
   Widget _buildHealthStats() {
     return ListView(
       children: [
-        _buildStatCard('Heart Rate', '72 bpm', 'Monitoring your heartbeat.'),
+        _buildStatCard(' Rate', '72 bpm', 'Monitoring your heartbeat.'),
         _buildStatCard('Steps', '10,500', 'Keeping you active every day.'),
         _buildStatCard('Calories', '550 kcal', 'Tracking your daily burn.'),
         _buildStatCard('Sleep', '8 hrs', 'Ensuring restful nights.'),

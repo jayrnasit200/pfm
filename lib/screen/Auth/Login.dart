@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pfm/screen/Auth/%20signup.dart';
 import 'package:pfm/screen/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
+  String get baseUrl => const String.fromEnvironment('BASE_URL');
 
   @override
   _LoginState createState() => _LoginState();
@@ -23,6 +25,7 @@ class _LoginState extends State<Login> {
 
     try {
       final response = await http.post(
+        // Uri.parse(widget.baseUrl + '/api/login'),
         Uri.parse('http://localhost:8000/api/login'),
         body: {'email': email, 'password': password},
       );
@@ -31,6 +34,9 @@ class _LoginState extends State<Login> {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        var userdata = data['user'];
+        upDateSharedPreferences(
+            userdata['id'], userdata['name'], userdata['email']);
         showSuccess(context, 'Login successful! 🎉');
         Navigator.pushReplacement(
           context,
@@ -40,8 +46,20 @@ class _LoginState extends State<Login> {
         showError(context, 'Invalid email or password');
       }
     } catch (e) {
+      // debugPrint(String.fromEnvironment('BASE_URL'));
+      debugPrint(e.toString());
+
+      // showError(context, String.fromEnvironment('genBaseUrl'));
       showError(context, 'An error occurred, please try again');
     }
+  }
+
+  void upDateSharedPreferences(int id, String name, String email) async {
+    SharedPreferences _prefs = await SharedPreferences.getInstance();
+    // _prefs.setString('token', token);
+    _prefs.setInt('id', id);
+    _prefs.setString('name', name);
+    _prefs.setString('email', email);
   }
 
   void showError(BuildContext context, String message) {

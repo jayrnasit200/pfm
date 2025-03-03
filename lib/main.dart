@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:pfm/screen/home.dart';
 
-void main() {
+void main() async {
   runApp(const MyApp());
 }
 
@@ -19,7 +22,33 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const homescreen(),
+      home: const testapp(),
+    );
+  }
+}
+
+class testapp extends StatefulWidget {
+  const testapp({Key? key}) : super(key: key);
+
+  @override
+  State<testapp> createState() => _testappState();
+}
+
+class _testappState extends State<testapp> {
+  void initState() {
+    super.initState();
+    Timer(
+        Duration(seconds: 2),
+        () => Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => homescreen())));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      // child: FlutterLogo(size: MediaQuery.of(context).size.height));
+      child: Image.asset('assets/logo.png'),
     );
   }
 }
