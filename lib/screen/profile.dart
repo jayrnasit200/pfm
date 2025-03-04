@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -30,15 +32,47 @@ class _ProfileState extends State<Profile> {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              'User Name',
-              style: Theme.of(context).textTheme.headlineMedium,
+            // Text(
+            //   // 'User Name',
+            //   getLoginname().toString(),
+            //   style: Theme.of(context).textTheme.headlineMedium,
+            // ),
+            FutureBuilder<String>(
+              future: getLoginname(), // This returns Future<String>
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.hasData) {
+                  return Text(
+                    snapshot.data!,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  );
+                } else {
+                  return Text('No name found');
+                }
+              },
             ),
             const SizedBox(height: 10),
-            Text(
-              'user.email@example.com',
-              style: Theme.of(context).textTheme.bodyLarge,
+            FutureBuilder<String>(
+              future: getLoginemail(), // This returns Future<String>
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.hasData) {
+                  return Text(
+                    snapshot.data!,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  );
+                } else {
+                  return Text('No name found');
+                }
+              },
             ),
+
             const SizedBox(height: 20),
             _buildProfileOption("Set Goals", Icons.flag, () {
               // Implement goal setting functionality
@@ -69,5 +103,16 @@ class _ProfileState extends State<Profile> {
         onTap: onTap,
       ),
     );
+  }
+
+  Future<String> getLoginname() async {
+    final prefs = await SharedPreferences.getInstance();
+    // print(prefs.getString('name'));
+    return prefs.getString('name') ?? 'Guest';
+  }
+
+  Future<String> getLoginemail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('email') ?? 'Guest';
   }
 }

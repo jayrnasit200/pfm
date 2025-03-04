@@ -3,7 +3,9 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:pfm/screen/Auth/Login.dart';
 import 'package:pfm/screen/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -22,25 +24,50 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const testapp(),
+      home: const SplashScreen(),
     );
   }
 }
 
-class testapp extends StatefulWidget {
-  const testapp({Key? key}) : super(key: key);
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  State<testapp> createState() => _testappState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _testappState extends State<testapp> {
+class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
-    Timer(
-        Duration(seconds: 2),
-        () => Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => homescreen())));
+    checkLoginStatus();
+    // Timer(
+    //     Duration(seconds: 2),
+    //     () => Navigator.pushReplacement(
+    //         context, MaterialPageRoute(builder: (context) => homescreen())));
+  }
+
+// Checks login status from SharedPreferences.
+  Future<void> checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    // Optionally delay to simulate a splash screen.
+    await Future.delayed(Duration(seconds: 1));
+
+    // Ensure that the widget is still mounted before navigating.
+    if (!mounted) return;
+
+    if (isLoggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => homescreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
   }
 
   @override
@@ -49,61 +76,6 @@ class _testappState extends State<testapp> {
       color: Colors.white,
       // child: FlutterLogo(size: MediaQuery.of(context).size.height));
       child: Image.asset('assets/logo.png'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: CurvedNavigationBar(
-        backgroundColor: Colors.blueAccent,
-        items: <Widget>[
-          Icon(Icons.add, size: 30),
-          Icon(Icons.list, size: 30),
-          Icon(Icons.compare_arrows, size: 30),
-        ],
-        onTap: (index) {
-          //Handle button tap
-        },
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
