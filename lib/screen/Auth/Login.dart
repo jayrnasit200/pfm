@@ -60,6 +60,7 @@ class _LoginState extends State<Login> {
     _prefs.setInt('id', id);
     _prefs.setString('name', name);
     _prefs.setString('email', email);
+    _prefs.get('id');
   }
 
   void showError(BuildContext context, String message) {
