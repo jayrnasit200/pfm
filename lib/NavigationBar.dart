@@ -60,22 +60,42 @@ class _NavigationBarsState extends State<NavigationBars> {
           if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const earning()),
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) => earning(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+              // MaterialPageRoute(builder: (context) => const earning()),
             );
           } else if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const Spending()),
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) => Spending(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+              // MaterialPageRoute(builder: (context) => const Spending()),
             );
           } else if (index == 3) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const Profile()),
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) => Profile(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+              // MaterialPageRoute(builder: (context) => const Profile()),
             );
           } else {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const homescreen()),
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) => homescreen(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+              // MaterialPageRoute(builder: (context) => const homescreen()),
             );
           }
         });

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
@@ -16,7 +15,7 @@ class _ProfileState extends State<Profile> {
     final Size size = MediaQuery.sizeOf(context);
     final double swidth = size.width;
     return Scaffold(
-      bottomNavigationBar: NavigationBars("Profile"),
+      bottomNavigationBar: const NavigationBars("Profile"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -41,7 +40,7 @@ class _ProfileState extends State<Profile> {
               future: getLoginname(), // This returns Future<String>
               builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else if (snapshot.hasData) {
@@ -50,7 +49,7 @@ class _ProfileState extends State<Profile> {
                     style: Theme.of(context).textTheme.headlineMedium,
                   );
                 } else {
-                  return Text('No name found');
+                  return const Text('No name found');
                 }
               },
             ),
@@ -59,7 +58,7 @@ class _ProfileState extends State<Profile> {
               future: getLoginemail(), // This returns Future<String>
               builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else if (snapshot.hasData) {
@@ -68,7 +67,7 @@ class _ProfileState extends State<Profile> {
                     style: Theme.of(context).textTheme.bodyLarge,
                   );
                 } else {
-                  return Text('No name found');
+                  return const Text('No name found');
                 }
               },
             ),
@@ -98,8 +97,8 @@ class _ProfileState extends State<Profile> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(icon, color: Colors.blue),
-        title: Text(title, style: TextStyle(fontSize: 18)),
-        trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey),
+        title: Text(title, style: const TextStyle(fontSize: 18)),
+        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
         onTap: onTap,
       ),
     );
