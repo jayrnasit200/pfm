@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class Spending extends StatefulWidget {
   const Spending({super.key});
@@ -194,11 +195,12 @@ class _SpendingState extends State<Spending> {
                     ),
                   );
                 } else {
-                  // _descriptionController.text = "";
-                  // _amountController.text = "";
-
-                  // _selectedCategoryId = null;
-                  // Handle error
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        Spending(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  );
                   print("Error sending data: ${response.statusCode}");
                 }
               }
@@ -210,41 +212,120 @@ class _SpendingState extends State<Spending> {
     );
   }
 
+  Future<List<dynamic>> _fetchSpendingsList() async {
+    final prefs = await SharedPreferences.getInstance();
+    var url = 'http://127.0.0.1:8000/api/spendingslist?id=' +
+        prefs.getInt('id').toString();
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonResponse = json.decode(response.body);
+      // Assuming your API returns a JSON object with a key 'data' containing the list.
+      return jsonResponse['data'] as List<dynamic>;
+    } else {
+      throw Exception('Failed to load spendings');
+    }
+  }
+
   Widget _buildHealthStats() {
-    return ListView(
-      children: [
-        _buildStatCard('Rate', '72 bpm', 'Monitoring your heartbeat.'),
-        _buildStatCard('Steps', '10,500', 'Keeping you active every day.'),
-        _buildStatCard('Calories', '550 kcal', 'Tracking your daily burn.'),
-        _buildStatCard('Sleep', '8 hrs', 'Ensuring restful nights.'),
-      ],
+    return FutureBuilder<List<dynamic>>(
+      future: _fetchSpendingsList(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No spendings found'));
+        } else {
+          final spendings = snapshot.data!;
+          // Build a ListView using the fetched spendings.
+          return ListView.builder(
+            itemCount: spendings.length,
+            itemBuilder: (context, index) {
+              final spending = spendings[index];
+              // Adjust field names as per your API response.
+              return _buildStatCard(
+                spending['amount']?.toString() ?? 'amount',
+                spending['description']?.toString() ?? 'description',
+                spending['Date']?.toString() ?? 'date',
+                index,
+                spendings,
+              );
+            },
+          );
+        }
+      },
     );
   }
 
-  Widget _buildStatCard(String title, String value, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildStatCard(String amount, String value, String date, int index,
+      List<dynamic> spendings) {
+    return Slidable(
+      key: ValueKey(spendings[index]['id']), // Unique key for each item
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-              const Text('View Details', style: TextStyle(color: Colors.blue)),
-            ],
+          SlidableAction(
+            onPressed: (context) => print('More options tapped'),
+            backgroundColor: Colors.blue.shade50,
+            foregroundColor: Colors.black,
+            icon: Icons.edit,
+            label: 'Edit',
           ),
-          const SizedBox(height: 5),
-          Text(subtitle, style: const TextStyle(color: Colors.grey)),
+          SlidableAction(
+            onPressed: (context) async {
+              final spendingId = spendings[index]['id'];
+              spendings.removeAt(index);
+
+              final response = await http.delete(
+                Uri.parse('http://127.0.0.1:8000/api/spendings/$spendingId'),
+              );
+
+              if (response.statusCode == 200) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Spending deleted')),
+                );
+                setState(() {}); // Refresh UI
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to delete spending')),
+                );
+              }
+            },
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: 'Delete',
+          ),
         ],
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("£ " + amount,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                    DateFormat.yMMMMd()
+                        .format(DateFormat("yyyy-MM-dd").parse(date)),
+                    style: const TextStyle(color: Colors.blue)),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(value, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }

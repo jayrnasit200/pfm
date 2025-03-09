@@ -18,6 +18,13 @@ class _LoginState extends State<Login> {
   TextEditingController passwordController = TextEditingController();
 
   void login(BuildContext context, String email, String password) async {
+    // temp
+    upDateSharedPreferences(1, 'jay', 'jay@jay.com');
+    showSuccess(context, 'Login successful! 🎉');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const homescreen()),
+    );
     if (email.isEmpty || password.isEmpty) {
       showError(context, 'Please fill in all fields');
       return;
