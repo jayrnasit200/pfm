@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
+import 'package:pfm/screen/rota.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
@@ -75,6 +76,10 @@ class _ProfileState extends State<Profile> {
             const SizedBox(height: 20),
             _buildProfileOption("Set Goals", Icons.flag, () {
               // Implement goal setting functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => rotaScreen()),
+              );
             }),
             _buildProfileOption("Add Job", Icons.work, () {
               // Implement add job functionality
