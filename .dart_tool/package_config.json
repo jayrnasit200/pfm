@@ -422,10 +422,10 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2025-03-08T19:52:45.883393Z",
+  "generated": "2025-03-14T15:23:37.476139Z",
   "generator": "pub",
-  "generatorVersion": "3.7.0",
+  "generatorVersion": "3.7.2",
   "flutterRoot": "file:///Users/jaynasit/development/flutter",
-  "flutterVersion": "3.29.0",
+  "flutterVersion": "3.29.2",
   "pubCache": "file:///Users/jaynasit/.pub-cache"
 }

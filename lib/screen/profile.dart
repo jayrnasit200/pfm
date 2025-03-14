@@ -78,7 +78,7 @@ class _ProfileState extends State<Profile> {
               // Implement goal setting functionality
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => rotaScreen()),
+                MaterialPageRoute(builder: (context) => rotaScreen(1)),
               );
             }),
             _buildProfileOption("Add Job", Icons.work, () {
