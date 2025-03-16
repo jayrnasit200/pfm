@@ -40,7 +40,8 @@ class _earningState extends State<earning> {
       final response = await http.get(Uri.parse(url));
 
       print("Response Status Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      var listdata = response.body;
+      // print(listdata['data']);
 
       if (response.statusCode == 200) {
         try {

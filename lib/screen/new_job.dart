@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pfm/screen/rota.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NewJobScreen extends StatefulWidget {
   final Map<String, dynamic>? jobData;
@@ -11,19 +14,57 @@ class NewJobScreen extends StatefulWidget {
 }
 
 class _NewJobScreenState extends State<NewJobScreen> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController jobTitleController = TextEditingController();
-  final TextEditingController payrateontroller = TextEditingController();
+  final TextEditingController payRateController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.jobData != null) {
       jobTitleController.text = widget.jobData!['jobTitle'] ?? "";
-      payrateontroller.text = widget.jobData!['industry'] ?? "";
-      descriptionController.text =
-          widget.jobData!['hourlyPay']?.toString() ?? "";
+      payRateController.text = widget.jobData!['hourlyPay']?.toString() ?? "";
+      descriptionController.text = widget.jobData!['description'] ?? "";
     }
+  }
+
+  Future<void> _saveJob() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      int? userId = prefs.getInt('id');
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/api/createjob'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "Jobtitle": jobTitleController.text,
+          "payrate": payRateController.text,
+          "description": descriptionController.text,
+          "user_id": userId,
+        }),
+      );
+      // print(response.body);
+      if (response.statusCode == 201) {
+        // Navigator.pop(context, true); // Close screen on success
+      } else {
+        _showError("Failed to save job. Try again.");
+      }
+    } catch (e) {
+      _showError("Error: $e");
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
@@ -37,13 +78,16 @@ class _NewJobScreenState extends State<NewJobScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildJobCard(),
-            const SizedBox(height: 20),
-            _buildSaveButton(),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildJobCard(),
+              const SizedBox(height: 20),
+              _buildSaveButton(),
+            ],
+          ),
         ),
       ),
     );
@@ -60,55 +104,37 @@ class _NewJobScreenState extends State<NewJobScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
           const Text("Job Title",
               style: TextStyle(color: Colors.grey, fontSize: 12)),
-          TextField(
+          TextFormField(
             controller: jobTitleController,
+            validator: (value) =>
+                value!.isEmpty ? "Job title is required" : null,
             decoration: const InputDecoration(border: InputBorder.none),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           const Text("Hourly Pay",
               style: TextStyle(color: Colors.grey, fontSize: 12)),
-          TextField(
-            controller: payrateontroller,
+          TextFormField(
+            controller: payRateController,
+            keyboardType: TextInputType.number,
+            validator: (value) =>
+                value!.isEmpty ? "Pay rate is required" : null,
             decoration: const InputDecoration(border: InputBorder.none),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           const Text("Job Description",
               style: TextStyle(color: Colors.grey, fontSize: 12)),
-          TextField(
+          TextFormField(
             controller: descriptionController,
+            validator: (value) =>
+                value!.isEmpty ? "Description is required" : null,
             decoration: const InputDecoration(border: InputBorder.none),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation1, animation2) =>
-                            rotaScreen(1),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                      // MaterialPageRoute(builder: (context) => const Spending()),
-                    );
-                  },
-                  child: const Text("View Rota",
-                      style: TextStyle(color: Colors.teal))),
-              TextButton(
-                  onPressed: () {},
-                  child: const Text("View Records",
-                      style: TextStyle(color: Colors.teal))),
-            ],
-          ),
         ],
       ),
     );
@@ -122,18 +148,12 @@ class _NewJobScreenState extends State<NewJobScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        onPressed: () {
-          _saveJob();
-        },
-        child: const Text("Save",
-            style: TextStyle(color: Colors.white, fontSize: 16)),
+        onPressed: isLoading ? null : _saveJob,
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text("Save",
+                style: TextStyle(color: Colors.white, fontSize: 16)),
       ),
     );
-  }
-
-  void _saveJob() {
-    // Handle job saving logic (send data to backend or store locally)
-    print("Job Saved: ${jobTitleController.text}");
-    // Navigator.pop(context, true);
   }
 }
