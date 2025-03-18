@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const String baseurl = "http://127.0.0.1:8000"; // Change as needed
 
 class NewJobScreen extends StatefulWidget {
   final Map<String, dynamic>? jobData;
@@ -39,18 +41,23 @@ class _NewJobScreenState extends State<NewJobScreen> {
       final prefs = await SharedPreferences.getInstance();
       int? userId = prefs.getInt('id');
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/createjob'),
+        Uri.parse('$baseurl/api/createjob'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "Jobtitle": jobTitleController.text,
-          "payrate": payRateController.text,
+          "payrate": double.tryParse(payRateController.text) ?? 0.0,
           "description": descriptionController.text,
           "user_id": userId,
         }),
       );
       // print(response.body);
-      if (response.statusCode == 201) {
-        // Navigator.pop(context, true); // Close screen on success
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Job saved successfully"),
+              backgroundColor: Colors.green),
+        );
+        Navigator.pop(context, true); // Close the screen on success
       } else {
         _showError("Failed to save job. Try again.");
       }
@@ -118,9 +125,17 @@ class _NewJobScreenState extends State<NewJobScreen> {
               style: TextStyle(color: Colors.grey, fontSize: 12)),
           TextFormField(
             controller: payRateController,
-            keyboardType: TextInputType.number,
-            validator: (value) =>
-                value!.isEmpty ? "Pay rate is required" : null,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(
+                  RegExp(r'^\d*\.?\d*$')), // Only allows numbers & decimals
+            ],
+            validator: (value) {
+              if (value == null || value.isEmpty) return "Pay rate is required";
+              final double? parsedValue = double.tryParse(value);
+              if (parsedValue == null) return "Enter a valid number";
+              return null;
+            },
             decoration: const InputDecoration(border: InputBorder.none),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),

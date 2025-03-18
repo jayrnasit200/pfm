@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
+import 'package:pfm/screen/joblist.dart';
 import 'package:pfm/screen/rota.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -82,7 +83,10 @@ class _ProfileState extends State<Profile> {
               );
             }),
             _buildProfileOption("Add Job", Icons.work, () {
-              // Implement add job functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => JobListScreen()),
+              );
             }),
             _buildProfileOption("Contact Information", Icons.phone, () {
               // Implement contact info update functionality
