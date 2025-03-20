@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:pfm/screen/RotaViewPage.dart';
 import 'package:pfm/screen/joblist.dart';
 import 'package:pfm/screen/rota.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseurl = "http://127.0.0.1:8000"; // Change as needed
+const String baseurl = "http://127.0.0.1:8000";
 
 class Jobedit extends StatefulWidget {
   // Accepts either a Map with job details or an int (job id)
@@ -223,7 +224,8 @@ class _JobeditState extends State<Jobedit> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => rotaScreen(_jobDetails?['id']),
+                  // builder: (context) => rotaScreen(_jobDetails?['id']),
+                  builder: (context) => RotaViewPage(_jobDetails?['id']),
                 ),
               );
             },

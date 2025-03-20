@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+const String baseurl = "http://127.0.0.1:8000";
+
 class rotaScreen extends StatefulWidget {
   final int id;
   rotaScreen(this.id);
@@ -46,7 +48,7 @@ class _rotaScreenState extends State<rotaScreen> {
   Future<void> fetchRotaData() async {
     try {
       var response = await http.get(
-        Uri.parse("http://127.0.0.1:8000/api/getrota?job=${widget.id}"),
+        Uri.parse("$baseurl/api/getrota?job=${widget.id}"),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -141,7 +143,7 @@ class _rotaScreenState extends State<rotaScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/jobrota"),
+        Uri.parse("$baseurl/api/jobrota"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"rota": rotaData}),
       );

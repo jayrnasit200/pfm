@@ -4,6 +4,8 @@ import 'package:pfm/screen/joblist.dart';
 import 'package:pfm/screen/rota.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const String baseurl = "http://127.0.0.1:8000";
+
 class Profile extends StatefulWidget {
   const Profile({super.key});
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:pfm/screen/Auth/login.dart';
 
+const String baseurl = "http://127.0.0.1:8000";
+
 class homescreen extends StatefulWidget {
   const homescreen({super.key});
 

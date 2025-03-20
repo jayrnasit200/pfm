@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
+const String baseurl = "http://127.0.0.1:8000";
+
 class Spending extends StatefulWidget {
   const Spending({super.key});
 
@@ -32,8 +34,7 @@ class _SpendingState extends State<Spending> {
   }
 
   Future<void> _fetchCategories() async {
-    final response =
-        await http.get(Uri.parse('http://127.0.0.1:8000/api/categorylist'));
+    final response = await http.get(Uri.parse('$baseurl/api/categorylist'));
     if (response.statusCode == 200) {
       final Map<String, dynamic> jsonResponse = json.decode(response.body);
       final List<dynamic> categories = jsonResponse['date'];
@@ -177,7 +178,7 @@ class _SpendingState extends State<Spending> {
                 print("Data to send: $data");
                 // Send data to your API.
                 final response = await http.post(
-                  Uri.parse('http://127.0.0.1:8000/api/newspendings'),
+                  Uri.parse('$baseurl/api/newspendings'),
                   headers: {'Content-Type': 'application/json'},
                   body: json.encode(data),
                 );
@@ -213,8 +214,7 @@ class _SpendingState extends State<Spending> {
 
   Future<List<dynamic>> _fetchSpendingsList() async {
     final prefs = await SharedPreferences.getInstance();
-    var url = 'http://127.0.0.1:8000/api/spendingslist?id=' +
-        prefs.getInt('id').toString();
+    var url = '$baseurl/api/spendingslist?id=' + prefs.getInt('id').toString();
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -277,8 +277,7 @@ class _SpendingState extends State<Spending> {
               spendings.removeAt(index);
 
               final response = await http.get(
-                Uri.parse(
-                    'http://127.0.0.1:8000/api/spendingsdeleted/$spendingId'),
+                Uri.parse('$baseurl/api/spendingsdeleted/$spendingId'),
               );
 
               if (response.statusCode == 200) {
@@ -330,8 +329,8 @@ class _SpendingState extends State<Spending> {
 
   Future<void> _editSpending(int spendingId) async {
     try {
-      final response = await http
-          .get(Uri.parse('http://127.0.0.1:8000/api/spendingedit/$spendingId'));
+      final response =
+          await http.get(Uri.parse('$baseurl/api/spendingedit/$spendingId'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         // print(data['data']['amount']);
@@ -437,7 +436,7 @@ class _SpendingState extends State<Spending> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:8000/api/spendingsupdate'),
+          Uri.parse('$baseurl/api/spendingsupdate'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(updatedData),
         );
