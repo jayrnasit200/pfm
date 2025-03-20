@@ -5,6 +5,8 @@ import 'package:pfm/screen/Auth/%20signup.dart';
 import 'package:pfm/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const String baseurl = "http://127.0.0.1:8000";
+
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
   String get baseUrl => const String.fromEnvironment('BASE_URL');

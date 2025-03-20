@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pfm/screen/Auth/login.dart';
 
+const String baseurl = "http://127.0.0.1:8000";
+
 class Signup extends StatefulWidget {
   const Signup({super.key});
 
@@ -37,7 +39,7 @@ class _SignupState extends State<Signup> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/register'),
+        Uri.parse('$baseurl/api/register'),
         body: {
           'name': name,
           'email': email,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:pfm/screen/Auth/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const String baseurl = "http://127.0.0.1:8000";
 
@@ -49,12 +50,23 @@ class _homescreenState extends State<homescreen> {
               fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
         ),
         IconButton(
-          icon: const Icon(Icons.logout, color: Colors.red),
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const Login()));
-          },
-        ),
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.clear(); // Clear all stored user data
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const Login()),
+                (route) => false, // Remove all previous routes
+              );
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text("Logged out successfully"),
+                    backgroundColor: Colors.green),
+              );
+            }),
       ],
     );
   }

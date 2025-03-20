@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
+import 'package:pfm/screen/Auth/Login.dart';
+import 'package:pfm/screen/SetGoals.dart';
+import 'package:pfm/screen/contactinfo.dart';
 import 'package:pfm/screen/joblist.dart';
 import 'package:pfm/screen/rota.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,10 +81,9 @@ class _ProfileState extends State<Profile> {
 
             const SizedBox(height: 20),
             _buildProfileOption("Set Goals", Icons.flag, () {
-              // Implement goal setting functionality
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => JobListScreen()),
+                MaterialPageRoute(builder: (context) => SetGoals()),
               );
             }),
             _buildProfileOption("Add Job", Icons.work, () {
@@ -91,10 +93,27 @@ class _ProfileState extends State<Profile> {
               );
             }),
             _buildProfileOption("Contact Information", Icons.phone, () {
-              // Implement contact info update functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Contactinfo()),
+              );
             }),
-            _buildProfileOption("Logout", Icons.logout, () {
+            _buildProfileOption("Logout", Icons.logout, () async {
               // Implement logout functionality
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.clear(); // Clear all stored user data
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const Login()),
+                (route) => false, // Remove all previous routes
+              );
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text("Logged out successfully"),
+                    backgroundColor: Colors.green),
+              );
             }),
           ],
         ),
