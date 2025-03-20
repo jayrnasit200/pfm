@@ -94,18 +94,19 @@ class _rotaScreenState extends State<rotaScreen> {
             .split('T')[0],
         "start_time": _formatTimeOfDay(shiftStartTimes[day]!),
         "end_time": _formatTimeOfDay(shiftEndTimes[day]!),
-        "job": widget.id,
+        "job": widget.id.toString(),
       };
     }).toList();
 
     try {
       // print("Sending Data for ID: ${widget.id}");
-      print(rotaData);
+      // print(jsonEncode({"rota": rotaData}));
       var response = await http.post(
-        Uri.parse("http://1.1.1.1/jobrota"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"rota": rotaData}),
+        Uri.parse("http://127.0.0.1:8000/api/jobrota"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"rota": rotaData}), // Use jsonEncode
       );
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("Rota saved successfully!")));
@@ -114,6 +115,7 @@ class _rotaScreenState extends State<rotaScreen> {
             .showSnackBar(SnackBar(content: Text("Failed to save rota")));
       }
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error: $e")));
     }
