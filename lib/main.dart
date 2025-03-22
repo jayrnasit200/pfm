@@ -7,6 +7,7 @@ import 'package:pfm/screen/Auth/Login.dart';
 import 'package:pfm/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const String baseurl = "http://127.0.0.1:8000";
 void main() async {
   runApp(const MyApp());
 }

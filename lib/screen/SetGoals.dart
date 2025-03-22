@@ -1,5 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:pfm/screen/Auth/Login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const String baseurl = "http://127.0.0.1:8000";
 
 class SetGoals extends StatefulWidget {
   @override
@@ -37,19 +44,53 @@ class _SetGoalsState extends State<SetGoals> {
       );
       return;
     }
+    final prefs = await SharedPreferences.getInstance();
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('goalName', goalNameController.text);
-    await prefs.setString('goalAmount', amountController.text);
-    await prefs.setString('goalDate', selectedDate!.toIso8601String());
+    int? userId =
+        prefs.getInt("id") ?? int.tryParse(prefs.getString("id") ?? "");
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text("Goal saved successfully!"),
-          backgroundColor: Colors.green),
-    );
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("User ID not found"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    final url = Uri.parse("$baseurl/api/creategoals");
+    final Map<String, dynamic> goalData = {
+      "user_id": userId,
+      "name": goalNameController.text,
+      "target_amount": amountController.text,
+      "deadline": selectedDate!.toIso8601String(),
+    };
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(goalData),
+      );
 
-    Navigator.pop(context); // Go back to the previous screen
+      if (response.statusCode == 201) {
+        print(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Goal saved successfully!"),
+              backgroundColor: Colors.green),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to save goal"),
+              backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -69,14 +110,15 @@ class _SetGoalsState extends State<SetGoals> {
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Target Amount (\$)"),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(labelText: "Target Amount "),
             ),
             SizedBox(height: 10),
             ListTile(
               title: Text(
                 selectedDate == null
                     ? "Select Target Date"
-                    : "Target Date: ${selectedDate!.toLocal()}".split(' ')[0],
+                    : "Target Date: ${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}",
               ),
               trailing: Icon(Icons.calendar_today),
               onTap: () => _pickDate(context),

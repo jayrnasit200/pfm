@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:pfm/screen/Auth/Login.dart';
+import 'package:pfm/screen/GoalsList.dart';
 import 'package:pfm/screen/SetGoals.dart';
 import 'package:pfm/screen/contactinfo.dart';
 import 'package:pfm/screen/joblist.dart';
@@ -83,7 +84,7 @@ class _ProfileState extends State<Profile> {
             _buildProfileOption("Set Goals", Icons.flag, () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SetGoals()),
+                MaterialPageRoute(builder: (context) => GoalsList()),
               );
             }),
             _buildProfileOption("Add Job", Icons.work, () {

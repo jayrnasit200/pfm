@@ -1,5 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:pfm/screen/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const String baseurl = "http://127.0.0.1:8000";
 
 class Contactinfo extends StatefulWidget {
   const Contactinfo({Key? key}) : super(key: key);
@@ -30,16 +36,56 @@ class _ContactinfoState extends State<Contactinfo> {
 
   Future<void> _updateProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('name', nameController.text);
-    await prefs.setString('email', emailController.text);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text("Profile updated successfully!"),
-          backgroundColor: Colors.green),
-    );
+    // Validate inputs
+    if (nameController.text.isEmpty || emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Please fill in all fields"),
+            backgroundColor: Colors.red),
+      );
+      return;
+    }
 
-    Navigator.pop(context); // Go back after updating
+    int? userId = prefs.getInt('id'); // Ensure ID is retrieved correctly
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseurl/api/updateprofile'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          'id': userId,
+          'name': nameController.text,
+          "email": emailController.text,
+        }),
+      );
+      print(response.body);
+      if (response.statusCode == 200) {
+        await prefs.setString('name', nameController.text);
+        await prefs.setString('email', emailController.text);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Profile updated successfully!"),
+              backgroundColor: Colors.green),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Profile()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to update profile"),
+              backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
