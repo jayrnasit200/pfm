@@ -96,6 +96,11 @@ class _SpendingState extends State<Spending> {
   void _showDatePopup(BuildContext context, DateTime selectedDate) {
     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
 
+    // Reset fields to avoid old data being carried over
+    _amountController.clear();
+    _descriptionController.clear();
+    _selectedCategoryId = null;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -164,9 +169,8 @@ class _SpendingState extends State<Spending> {
                 final description = _descriptionController.text;
                 final categoryId = _selectedCategoryId;
                 final prefs = await SharedPreferences.getInstance();
-                // Use getInt instead of getString since the id was stored as int.
                 final userId = prefs.getInt('id');
-                // Build the data object.
+
                 final data = {
                   'amount': amount,
                   'cat_id': categoryId,
@@ -174,16 +178,14 @@ class _SpendingState extends State<Spending> {
                   'user_id': userId?.toString() ?? "",
                   'date': formattedDate,
                 };
-                // Print data to debug.
-                print("Data to send: $data");
-                // Send data to your API.
+
                 final response = await http.post(
                   Uri.parse('$baseurl/api/newspendings'),
                   headers: {'Content-Type': 'application/json'},
                   body: json.encode(data),
                 );
+
                 if (response.statusCode == 200) {
-                  // Successfully sent
                   showSuccess(context, 'Spending Created successfully! 🎉');
                   Navigator.pushReplacement(
                     context,
@@ -195,12 +197,6 @@ class _SpendingState extends State<Spending> {
                     ),
                   );
                 } else {
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        Spending(),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
-                  );
                   print("Error sending data: ${response.statusCode}");
                 }
               }
