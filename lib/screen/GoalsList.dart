@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:pfm/screen/SetGoals.dart';
 import 'package:pfm/screen/ViewGoal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 // import 'package:pfm/screen/ViewGoal.dart';
+const String baseurl = "http://127.0.0.1:8000";
 
 class GoalsList extends StatefulWidget {
   @override
