@@ -52,7 +52,8 @@ class _RotaViewPageState extends State<RotaViewPage> {
     );
   }
 
-  void _editRota(int id, String startTime, String endTime, String status) {
+  void _editRota(
+      int id, String startTime, String endTime, String date, String status) {
     TimeOfDay selectedStartTime = _parseTime(startTime);
     TimeOfDay selectedEndTime = _parseTime(endTime);
     bool isCompleted = status.toLowerCase() == 'completed';
@@ -67,6 +68,7 @@ class _RotaViewPageState extends State<RotaViewPage> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text("Date of Shift: $date"), // Fixed undefined variable
                   ListTile(
                     title: Text(
                         "Start Time: ${selectedStartTime.format(context)}"),
@@ -121,12 +123,14 @@ class _RotaViewPageState extends State<RotaViewPage> {
                         headers: {'Content-Type': 'application/json'},
                         body: jsonEncode({
                           'id': id,
+                          'date': date,
                           'startTime': _formatTime(selectedStartTime),
                           'endTime': _formatTime(selectedEndTime),
                           'status': updatedStatus,
+                          'jobid': widget.jobId,
                         }),
                       );
-
+                      // print(response.body);
                       if (response.statusCode == 200) {
                         fetchRotaRecords();
                         Navigator.pop(context);
@@ -218,8 +222,8 @@ class _RotaViewPageState extends State<RotaViewPage> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               ElevatedButton(
-                                onPressed: () => _editRota(
-                                    rota['id'], startTime, endTime, status),
+                                onPressed: () => _editRota(rota['id'],
+                                    startTime, endTime, date, status),
                                 child: Text("Update"),
                               ),
                             ],
@@ -229,8 +233,7 @@ class _RotaViewPageState extends State<RotaViewPage> {
                     ),
                   );
                 }
-                return SizedBox
-                    .shrink(); // Return empty widget for non-pending records
+                return SizedBox.shrink(); // Hide completed records
               },
             ),
     );

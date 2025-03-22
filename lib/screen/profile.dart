@@ -33,7 +33,7 @@ class _ProfileState extends State<Profile> {
             ClipRRect(
               borderRadius: BorderRadius.circular(1000),
               child: Image.network(
-                "https://img.freepik.com/free-photo/3d-illustration-cute-cartoon-girl-blue-jacket-glasses_1142-41044.jpg",
+                "https://img.freepik.com/premium-vector/blue-circle-with-white-user-vector_941526-5765.jpg?semt=ais_hybrid",
                 height: swidth / 4,
                 width: swidth / 4,
               ),
