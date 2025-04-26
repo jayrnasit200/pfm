@@ -25,6 +25,87 @@ class _ViewGoalState extends State<ViewGoal> {
     _fetchTransactions(); // Fetch transactions when the page loads
   }
 
+  Future<void> _editGoal(BuildContext context) async {
+    final TextEditingController nameController =
+        TextEditingController(text: goal["name"]);
+    final TextEditingController targetController =
+        TextEditingController(text: goal["target_amount"].toString());
+    final _formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Edit Goal"),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: "Goal Name"),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please enter a name'
+                      : null,
+                ),
+                TextFormField(
+                  controller: targetController,
+                  decoration: InputDecoration(labelText: "Target Amount (£)"),
+                  keyboardType: TextInputType.number,
+                  validator: (value) =>
+                      value == null || double.tryParse(value) == null
+                          ? 'Enter a valid amount'
+                          : null,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (_formKey.currentState?.validate() ?? false) {
+                  try {
+                    final response = await http.post(
+                      Uri.parse('$baseurl/api/goalupdate'),
+                      headers: {'Content-Type': 'application/json'},
+                      body: jsonEncode({
+                        'id': goal["id"],
+                        'name': nameController.text,
+                        'target_amount': double.parse(targetController.text),
+                      }),
+                    );
+                    if (response.statusCode == 200) {
+                      setState(() {
+                        goal["name"] = nameController.text;
+                        goal["target_amount"] =
+                            double.parse(targetController.text);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Goal updated successfully')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to update goal.')));
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Save Changes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Fetch transactions from the API
   Future<void> _fetchTransactions() async {
     try {
@@ -210,6 +291,12 @@ class _ViewGoalState extends State<ViewGoal> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.blue,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () => _editGoal(context),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
