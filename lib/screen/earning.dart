@@ -63,13 +63,20 @@ class _earningState extends State<earning> {
   }
 
   Future<void> _fetchEarnings(int? jobId) async {
+    final prefs = await SharedPreferences.getInstance();
+    int? id = prefs.getInt('id');
+    if (id == null) {
+      print("User ID not found in SharedPreferences");
+      return;
+    }
+
     String url = jobId != null && jobId > 0
         ? '$baseurl/api/getearnings?job_id=$jobId'
-        : '$baseurl/api/getearnings';
+        : '$baseurl/api/getearningsnyuser?id=$id';
 
     try {
       final response = await http.get(Uri.parse(url));
-
+      print(response.body);
       if (response.statusCode == 200) {
         Map<String, dynamic> jsonResponse = json.decode(response.body);
         List<dynamic> earnings = jsonResponse['data'];

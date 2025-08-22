@@ -75,28 +75,30 @@ class _JobListScreenState extends State<JobListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : errorMsg.isNotEmpty
               ? Center(child: Text(errorMsg))
-              : ListView.builder(
-                  itemCount: jobs.length,
-                  itemBuilder: (context, index) {
-                    final job = jobs[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      child: ListTile(
-                        title: Text(job['Job_title'] ?? "No Title"),
-                        subtitle:
-                            Text(job['Job_description'] ?? "No Description"),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => Jobedit(job['id'])));
-                        },
-                      ),
-                    );
-                  },
-                ),
+              : jobs.isEmpty
+                  ? const Center(child: Text("No jobs found."))
+                  : ListView.builder(
+                      itemCount: jobs.length,
+                      itemBuilder: (context, index) {
+                        final job = jobs[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          child: ListTile(
+                            title: Text(job['Job_title'] ?? "No Title"),
+                            subtitle: Text(
+                                job['Job_description'] ?? "No Description"),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => Jobedit(job['id'])));
+                            },
+                          ),
+                        );
+                      },
+                    ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {

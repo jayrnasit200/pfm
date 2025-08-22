@@ -6,8 +6,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pfm"
-    compileSdk = flutter.compileSdkVersion
+    namespace "com.example.pfm"
+    // compileSdk = flutter.compileSdkVersion
+    compileSdkVersion 35
+
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

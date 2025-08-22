@@ -307,10 +307,13 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 
 @protocol FlutterPluginRegistrar;
 @class FlutterMethodCall;
+@class FlutterError;
 SWIFT_CLASS("_TtC22flutter_secure_storage31SwiftFlutterSecureStoragePlugin")
-@interface SwiftFlutterSecureStoragePlugin : NSObject <FlutterPlugin>
+@interface SwiftFlutterSecureStoragePlugin : NSObject <FlutterPlugin, FlutterStreamHandler>
 + (void)registerWithRegistrar:(id <FlutterPluginRegistrar> _Nonnull)registrar;
 - (void)handleMethodCall:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
+- (FlutterError * _Nullable)onListenWithArguments:(id _Nullable)arguments eventSink:(FlutterEventSink _Nonnull)eventSink SWIFT_WARN_UNUSED_RESULT;
+- (FlutterError * _Nullable)onCancelWithArguments:(id _Nullable)arguments SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
@@ -631,10 +634,13 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 
 @protocol FlutterPluginRegistrar;
 @class FlutterMethodCall;
+@class FlutterError;
 SWIFT_CLASS("_TtC22flutter_secure_storage31SwiftFlutterSecureStoragePlugin")
-@interface SwiftFlutterSecureStoragePlugin : NSObject <FlutterPlugin>
+@interface SwiftFlutterSecureStoragePlugin : NSObject <FlutterPlugin, FlutterStreamHandler>
 + (void)registerWithRegistrar:(id <FlutterPluginRegistrar> _Nonnull)registrar;
 - (void)handleMethodCall:(FlutterMethodCall * _Nonnull)call result:(FlutterResult _Nonnull)result;
+- (FlutterError * _Nullable)onListenWithArguments:(id _Nullable)arguments eventSink:(FlutterEventSink _Nonnull)eventSink SWIFT_WARN_UNUSED_RESULT;
+- (FlutterError * _Nullable)onCancelWithArguments:(id _Nullable)arguments SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 

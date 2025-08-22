@@ -137,7 +137,7 @@ class _ProfileState extends State<Profile> {
 
   Future<String> getLoginname() async {
     final prefs = await SharedPreferences.getInstance();
-    // print(prefs.getString('name'));
+    print(prefs.getString('name'));
     return prefs.getString('name') ?? 'Guest';
   }
 

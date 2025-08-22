@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:pfm/screen/Auth/Login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String baseurl = "http://127.0.0.1:8000";
@@ -70,8 +69,8 @@ class _SetGoalsState extends State<SetGoals> {
         body: jsonEncode(goalData),
       );
 
-      if (response.statusCode == 201) {
-        print(response.body);
+      if (response.statusCode == 200) {
+        // print(response.body);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

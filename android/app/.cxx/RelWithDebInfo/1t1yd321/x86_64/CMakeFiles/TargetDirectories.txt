@@ -1,0 +1,2 @@
+/Users/jaynasit/Documents/pfm/android/app/.cxx/RelWithDebInfo/1t1yd321/x86_64/CMakeFiles/edit_cache.dir
+/Users/jaynasit/Documents/pfm/android/app/.cxx/RelWithDebInfo/1t1yd321/x86_64/CMakeFiles/rebuild_cache.dir
