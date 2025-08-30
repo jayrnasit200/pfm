@@ -57,19 +57,16 @@ class _rotaScreenState extends State<rotaScreen> {
 
         setState(() {
           for (var entry in fetchedData) {
-            // Corrected the field name to 'Date'
-            String date =
-                entry['Date'] ?? ''; // 'Date' is used here instead of 'date'
+            String date = entry['Date'] ?? '';
             String startTime = entry['sTime'] ?? '00:00';
             String endTime = entry['eTime'] ?? '00:00';
 
             try {
               DateTime entryDate = DateTime.parse(date);
-              int dayIndex = entryDate.weekday - 1; // Monday = 0, Sunday = 6
+              int dayIndex = entryDate.weekday - 1; // Monday = 0
 
               if (dayIndex >= 0 && dayIndex < dayNames.length) {
                 String dayName = dayNames[dayIndex];
-
                 shiftStartTimes[dayName] = _parseTime(startTime);
                 shiftEndTimes[dayName] = _parseTime(endTime);
               }
@@ -80,10 +77,16 @@ class _rotaScreenState extends State<rotaScreen> {
           isLoading = false;
         });
       } else {
-        print("Failed to fetch data");
+        setState(() {
+          isLoading = false;
+        });
+        print("Failed to fetch rota data. Status: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error: $e");
+      setState(() {
+        isLoading = false;
+      });
+      print("Error fetching rota data: $e");
     }
   }
 
@@ -114,7 +117,7 @@ class _rotaScreenState extends State<rotaScreen> {
           if (pickedTime.hour < shiftStartTimes[day]!.hour ||
               (pickedTime.hour == shiftStartTimes[day]!.hour &&
                   pickedTime.minute <= shiftStartTimes[day]!.minute)) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text("End time must be later than start time")));
           } else {
             shiftEndTimes[day] = pickedTime;
@@ -149,14 +152,13 @@ class _rotaScreenState extends State<rotaScreen> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Rota saved successfully!")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Rota saved successfully!")));
       } else {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Failed to save rota")));
+            .showSnackBar(const SnackBar(content: Text("Failed to save rota")));
       }
     } catch (e) {
-      print(e);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error: $e")));
     }
@@ -166,11 +168,11 @@ class _rotaScreenState extends State<rotaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Week Rota", style: TextStyle(color: Colors.white)),
+        title: const Text("Week Rota"),
         backgroundColor: Colors.blue,
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : GestureDetector(
               onHorizontalDragEnd: (details) {
                 if (details.primaryVelocity != null) {
@@ -189,21 +191,21 @@ class _rotaScreenState extends State<rotaScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.arrow_back),
+                          icon: const Icon(Icons.arrow_back),
                           onPressed: () => _changeWeek(-7),
                         ),
                         Text(
                           "Week Starting: ${selectedWeekStart.toLocal().toString().split(' ')[0]}",
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         IconButton(
-                          icon: Icon(Icons.arrow_forward),
+                          icon: const Icon(Icons.arrow_forward),
                           onPressed: () => _changeWeek(7),
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Expanded(
                       child: ListView.builder(
                         itemCount: dayNames.length,
@@ -221,11 +223,11 @@ class _rotaScreenState extends State<rotaScreen> {
                                 children: [
                                   Text(
                                     "$day - ${date.toLocal().toString().split(' ')[0]}",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -253,9 +255,9 @@ class _rotaScreenState extends State<rotaScreen> {
                     ),
                     ElevatedButton(
                       onPressed: _saveRota,
-                      child: Text("Save Rota"),
+                      child: const Text("Save Rota"),
                       style: ElevatedButton.styleFrom(
-                          minimumSize: Size(double.infinity, 50)),
+                          minimumSize: const Size(double.infinity, 50)),
                     ),
                   ],
                 ),

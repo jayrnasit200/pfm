@@ -1,101 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:pfm/screen/new_job.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pfm/data/local/local_db.dart';
+import 'package:pfm/data/models/earning.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:pfm/data/models/job.dart';
 
-const String baseurl = "http://127.0.0.1:8000";
-
-class earning extends StatefulWidget {
-  const earning({super.key});
+class EarningScreen extends StatefulWidget {
+  const EarningScreen({super.key});
 
   @override
-  State<earning> createState() => _earningState();
+  State<EarningScreen> createState() => _EarningScreenState();
 }
 
-class _earningState extends State<earning> {
+class _EarningScreenState extends State<EarningScreen> {
   DateTime _selectedDay = DateTime.now();
-  String? _selectedJob;
-  List<Map<String, dynamic>> jobsData = [];
-  List<String> jobList = [];
-  List<Map<String, dynamic>> earningsList = [];
+  String? _selectedJob = "all";
+
+  List<dynamic> jobList = [];
+  List<Earning> earningsList = [];
 
   @override
   void initState() {
     super.initState();
-    _selectedJob = "all"; // Set default value to "all"
-    _fetchJobs();
+    _loadJobs();
   }
 
-  Future<void> _fetchJobs() async {
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('id');
-
-    if (userId == null) {
-      print("User ID not found in SharedPreferences");
-      return;
-    }
-
-    var url = '$baseurl/api/getjob?id=$userId';
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        Map<String, dynamic> jsonResponse = json.decode(response.body);
-        List<dynamic> jobs = jsonResponse['data'];
-
-        setState(() {
-          jobsData = jobs.cast<Map<String, dynamic>>();
-          jobList = jobsData.map((job) => job['Job_title'].toString()).toList();
-        });
-
-        // Fetch earnings when jobs are loaded
-        _fetchEarnings(
-            null); // Fetch all earnings initially when "all" is selected
-      } else {
-        print('Failed to load jobs. Status Code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print("Error fetching jobs: $e");
-    }
+  /// Load jobs from local DB
+  Future<void> _loadJobs() async {
+    final db = LocalDb.isar;
+    final jobs = await db.jobs.where().findAll(); // ✅ correct in Isar v3
+    setState(() {
+      jobList = jobs;
+    });
+    _loadEarnings(null); // Load all earnings initially
   }
 
-  Future<void> _fetchEarnings(int? jobId) async {
-    final prefs = await SharedPreferences.getInstance();
-    int? id = prefs.getInt('id');
-    if (id == null) {
-      print("User ID not found in SharedPreferences");
-      return;
-    }
+  /// Load earnings, optionally filtered by job
+  Future<void> _loadEarnings(int? jobId) async {
+    final db = LocalDb.isar;
 
-    String url = jobId != null && jobId > 0
-        ? '$baseurl/api/getearnings?job_id=$jobId'
-        : '$baseurl/api/getearningsnyuser?id=$id';
+    final earnings = jobId != null
+        ? await db.earnings.filter().jobIdEqualTo(jobId).findAll()
+        : await db.earnings.where().findAll(); // ✅ use where() for all
 
-    try {
-      final response = await http.get(Uri.parse(url));
-      print(response.body);
-      if (response.statusCode == 200) {
-        Map<String, dynamic> jsonResponse = json.decode(response.body);
-        List<dynamic> earnings = jsonResponse['data'];
-
-        setState(() {
-          earningsList = earnings.map((e) {
-            return {
-              'category': e['category'],
-              'amount': e['amount'],
-              'date': e['date_earned'],
-            };
-          }).toList();
-        });
-      } else {
-        print('Failed to load earnings. Status Code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print("Error fetching earnings: $e");
-    }
+    setState(() {
+      earningsList = earnings;
+    });
   }
 
   @override
@@ -123,59 +75,42 @@ class _earningState extends State<earning> {
   }
 
   Widget _buildJobDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        DropdownButton<String>(
-          value: _selectedJob != null &&
-                  (jobList.contains(_selectedJob) || _selectedJob == "all")
-              ? _selectedJob
-              : null,
-          hint: const Text('Choose a job or select "Add New Job"'),
-          isExpanded: true,
-          items: [
-            const DropdownMenuItem(
-              value: "all",
-              child: Text("All Jobs"),
-            ),
-            ...jobList.map((job) => DropdownMenuItem(
-                  value: job,
-                  child: Text(job),
-                )),
-            const DropdownMenuItem(
-              value: "Add New Job",
-              child: Text("➕ Add New Job"),
-            ),
-          ],
-          onChanged: (String? newValue) {
-            if (newValue == "Add New Job") {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation1, animation2) =>
-                      NewJobScreen(),
-                  transitionDuration: Duration.zero,
-                  reverseTransitionDuration: Duration.zero,
-                ),
-              );
-            } else {
-              setState(() {
-                _selectedJob = newValue;
-              });
-
-              if (newValue == "all") {
-                _fetchEarnings(null);
-              } else {
-                var selectedJobData =
-                    jobsData.firstWhere((job) => job['Job_title'] == newValue);
-                int jobId = selectedJobData['id'];
-                _fetchEarnings(jobId);
-              }
-            }
-          },
+    return DropdownButton<String>(
+      value: _selectedJob,
+      isExpanded: true,
+      items: [
+        const DropdownMenuItem(
+          value: "all",
+          child: Text("All Jobs"),
+        ),
+        ...jobList.map((job) => DropdownMenuItem(
+              value: job.title,
+              child: Text(job.title),
+            )),
+        const DropdownMenuItem(
+          value: "Add New Job",
+          child: Text("➕ Add New Job"),
         ),
       ],
+      onChanged: (String? newValue) {
+        if (newValue == "Add New Job") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NewJobScreen()),
+          ).then((_) => _loadJobs()); // reload jobs after adding new
+        } else {
+          setState(() {
+            _selectedJob = newValue;
+          });
+
+          if (newValue == "all") {
+            _loadEarnings(null);
+          } else {
+            final job = jobList.firstWhere((j) => j.title == newValue);
+            _loadEarnings(job.id);
+          }
+        }
+      },
     );
   }
 
@@ -194,34 +129,27 @@ class _earningState extends State<earning> {
   }
 
   Widget _buildEarningsSection() {
-    if (_selectedJob == null) {
-      return Center(
-        child: ElevatedButton(
-          onPressed: () {
-            print("Please select a job from the dropdown");
-          },
-          child: const Text("Show Earnings"),
-        ),
-      );
-    }
     if (earningsList.isEmpty) {
       return const Center(child: Text("No earnings available"));
     }
+
     return ListView.builder(
       itemCount: earningsList.length,
       itemBuilder: (context, index) {
-        var earning = earningsList[index];
+        final earning = earningsList[index];
         return _buildEarningCard(
-            earning['category'], earning['amount'], earning['date']);
+          earning.category,
+          earning.amount,
+          earning.dateEarned,
+        );
       },
     );
   }
 
-  Widget _buildEarningCard(dynamic category, dynamic amount, dynamic date) {
+  Widget _buildEarningCard(String category, double amount, DateTime date) {
     return InkWell(
       onTap: () {
-        print(
-            "Earning tapped: Category - $category, Amount - $amount, Date - $date");
+        print("Earning tapped: $category, $amount, $date");
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
@@ -234,7 +162,7 @@ class _earningState extends State<earning> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Amount: \£${amount.toStringAsFixed(2)}",
+            Text("Amount: £${amount.toStringAsFixed(2)}",
                 style:
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
@@ -243,7 +171,8 @@ class _earningState extends State<earning> {
               children: [
                 Text("Category: $category",
                     style: const TextStyle(color: Colors.grey)),
-                Text("Date: $date", style: const TextStyle(color: Colors.grey)),
+                Text("Date: ${date.toLocal().toString().split(' ')[0]}",
+                    style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ],

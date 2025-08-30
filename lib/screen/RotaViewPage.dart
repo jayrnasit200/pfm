@@ -37,19 +37,18 @@ class _RotaViewPageState extends State<RotaViewPage> {
           isLoading = false;
         });
       } else {
-        print("Failed to load rota records");
+        setState(() => isLoading = false);
+        print("Failed to load rota records: ${response.statusCode}");
       }
     } catch (e) {
+      setState(() => isLoading = false);
       print("Error: $e");
     }
   }
 
   Future<TimeOfDay?> _pickTime(
       BuildContext context, TimeOfDay initialTime) async {
-    return await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-    );
+    return await showTimePicker(context: context, initialTime: initialTime);
   }
 
   void _editRota(
@@ -64,48 +63,39 @@ class _RotaViewPageState extends State<RotaViewPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text("Update Rota"),
+              title: const Text("Update Rota"),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Date of Shift: $date"), // Fixed undefined variable
+                  Text("Date of Shift: $date"),
                   ListTile(
                     title: Text(
                         "Start Time: ${selectedStartTime.format(context)}"),
-                    trailing: Icon(Icons.access_time),
+                    trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       TimeOfDay? pickedTime =
                           await _pickTime(context, selectedStartTime);
-                      if (pickedTime != null) {
-                        setState(() {
-                          selectedStartTime = pickedTime;
-                        });
-                      }
+                      if (pickedTime != null)
+                        setState(() => selectedStartTime = pickedTime);
                     },
                   ),
                   ListTile(
                     title: Text("End Time: ${selectedEndTime.format(context)}"),
-                    trailing: Icon(Icons.access_time),
+                    trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       TimeOfDay? pickedTime =
                           await _pickTime(context, selectedEndTime);
-                      if (pickedTime != null) {
-                        setState(() {
-                          selectedEndTime = pickedTime;
-                        });
-                      }
+                      if (pickedTime != null)
+                        setState(() => selectedEndTime = pickedTime);
                     },
                   ),
                   Row(
                     children: [
-                      Text("Completed: "),
+                      const Text("Completed: "),
                       Checkbox(
                         value: isCompleted,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            isCompleted = value ?? false;
-                          });
-                        },
+                        onChanged: (bool? value) =>
+                            setState(() => isCompleted = value ?? false),
                       ),
                     ],
                   ),
@@ -116,7 +106,6 @@ class _RotaViewPageState extends State<RotaViewPage> {
                   onPressed: () async {
                     String updatedStatus =
                         isCompleted ? 'completed' : 'pending';
-
                     try {
                       var response = await http.post(
                         Uri.parse("$baseurl/api/updaterotastatus"),
@@ -130,7 +119,6 @@ class _RotaViewPageState extends State<RotaViewPage> {
                           'jobid': widget.jobId,
                         }),
                       );
-                      // print(response.body);
                       if (response.statusCode == 200) {
                         fetchRotaRecords();
                         Navigator.pop(context);
@@ -141,13 +129,11 @@ class _RotaViewPageState extends State<RotaViewPage> {
                       print("Error: $e");
                     }
                   },
-                  child: Text("Submit"),
+                  child: const Text("Submit"),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("Cancel"),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
                 ),
               ],
             );
@@ -162,16 +148,13 @@ class _RotaViewPageState extends State<RotaViewPage> {
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
-  String _formatTime(TimeOfDay time) {
-    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
-  }
+  String _formatTime(TimeOfDay time) =>
+      "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
 
   void _addRota() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => rotaScreen(widget.jobId),
-      ),
+      MaterialPageRoute(builder: (context) => rotaScreen(widget.jobId)),
     );
   }
 
@@ -179,63 +162,65 @@ class _RotaViewPageState extends State<RotaViewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Rota View"),
+        title: const Text("Rota View"),
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             onPressed: _addRota,
           ),
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: rotaRecords.length,
-              itemBuilder: (context, index) {
-                var rota = rotaRecords[index];
-                String date = rota['Date'];
-                String startTime = rota['sTime'];
-                String endTime = rota['eTime'];
-                String status = rota['status'];
+          ? const Center(child: CircularProgressIndicator())
+          : rotaRecords.isEmpty
+              ? const Center(child: Text("No rota records found"))
+              : ListView.builder(
+                  itemCount: rotaRecords.length,
+                  itemBuilder: (context, index) {
+                    var rota = rotaRecords[index];
+                    String date = rota['Date'];
+                    String startTime = rota['sTime'];
+                    String endTime = rota['eTime'];
+                    String status = rota['status'] ?? 'pending';
 
-                if (status == "pending") {
-                  return Card(
-                    elevation: 3,
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Date: $date",
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Text("Start Time: $startTime"),
-                          Text("End Time: $endTime"),
-                          Text("Status: $status"),
-                          SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => _editRota(rota['id'],
-                                    startTime, endTime, date, status),
-                                child: Text("Update"),
-                              ),
-                            ],
-                          ),
-                        ],
+                    if (status.toLowerCase() != "pending")
+                      return const SizedBox.shrink();
+
+                    return Card(
+                      elevation: 3,
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Date: $date",
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text("Start Time: $startTime"),
+                            Text("End Time: $endTime"),
+                            Text("Status: $status"),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => _editRota(rota['id'],
+                                      startTime, endTime, date, status),
+                                  child: const Text("Update"),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }
-                return SizedBox.shrink(); // Hide completed records
-              },
-            ),
+                    );
+                  },
+                ),
     );
   }
 }

@@ -49,7 +49,7 @@ class _LoginState extends State<Login> {
         showSuccess(context, 'Login successful! 🎉');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const homescreen()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
         showError(context, 'Invalid email or password');

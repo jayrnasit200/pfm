@@ -1,57 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:pfm/NavigationBar.dart';
+// ignore: library_prefixes
 import 'package:pfm/screen/Auth/login.dart';
+import 'package:pfm/data/local/local_db.dart';
+import 'package:pfm/data/models/goal.dart';
+import 'package:pfm/data/models/earning.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:pfm/data/models/job.dart';
 
-const String baseurl = "http://127.0.0.1:8000";
-
-class homescreen extends StatefulWidget {
-  const homescreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<homescreen> createState() => _homescreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _homescreenState extends State<homescreen> {
+class _HomeScreenState extends State<HomeScreen> {
   double totalEarnings = 0.0;
   double totalSpending = 0.0;
-  List goals = [];
-  List shifts = [];
+  List<Goal> goals = [];
+  // List<Job> shifts = [];
+  List<job> shifts = [];
 
   @override
   void initState() {
     super.initState();
-    fetchFinancialData();
+    _loadFinancialData();
   }
 
-  Future<void> fetchFinancialData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
+  /// Load all financial data from local DB
+  Future<void> _loadFinancialData() async {
+    final db = LocalDb.isar;
 
-      int? userId =
-          prefs.getInt("id") ?? int.tryParse(prefs.getString("id") ?? "");
+    // Load goals
+    final allGoals = await db.goals.where().findAll();
 
-      final response =
-          await http.get(Uri.parse('$baseurl/api/Homepage?id=$userId'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          goals = data['goals'] ?? [];
-          shifts = data['rota'] ?? [];
+    // Load shifts/jobs
+    final allShifts = await db.jobs.where().findAll();
 
-          totalEarnings = (data['TotalEarn'] as num?)?.toDouble() ?? 0.0;
-          totalSpending = (data['Totalspending'] is num)
-              ? (data['Totalspending'] as num).toDouble()
-              : double.tryParse(data['Totalspending']?.toString() ?? "0.0") ??
-                  0.0;
-        });
-      }
-    } catch (e) {
-      print("Error fetching data: $e");
-    }
+    // Load earnings
+    final allEarnings = await db.earnings.where().findAll();
+    double earningsSum = allEarnings.fold(0.0, (sum, e) => sum + e.amount);
+
+    double spendingSum = 0.0; // Update if you have a spending collection
+
+    setState(() {
+      goals = allGoals;
+      // shifts = allShifts.cast<JobModel1.job>();
+      shifts = allShifts.cast<job>();
+
+      totalEarnings = earningsSum;
+      totalSpending = spendingSum;
+    });
   }
 
   @override
@@ -97,9 +99,9 @@ class _homescreenState extends State<homescreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildFinancialCard('Earnings', '\£$totalEarnings',
-                    Colors.green, FontAwesome5Solid.dollar_sign),
-                _buildFinancialCard('Spending', '\£$totalSpending', Colors.red,
+                _buildFinancialCard('Earnings', '£$totalEarnings', Colors.green,
+                    FontAwesome5Solid.dollar_sign),
+                _buildFinancialCard('Spending', '£$totalSpending', Colors.red,
                     FontAwesome5Solid.shopping_cart),
               ],
             ),
@@ -138,11 +140,9 @@ class _homescreenState extends State<homescreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
             ...goals.map((goal) {
-              double saved = (goal['saved_amount'] as num?)?.toDouble() ?? 0.0;
-              double target = (goal['target_amount'] as num?)?.toDouble() ??
-                  1.0; // Prevent division by zero
-              return _buildSavingsProgress(
-                  goal['name'] ?? 'Unnamed Goal', saved, target);
+              double saved = goal.savedAmount;
+              double target = goal.targetAmount;
+              return _buildSavingsProgress(goal.name, saved, target);
             }).toList(),
           ],
         ),
@@ -151,7 +151,7 @@ class _homescreenState extends State<homescreen> {
   }
 
   Widget _buildSavingsProgress(String goal, double saved, double target) {
-    double progress = saved / target;
+    double progress = saved / (target == 0 ? 1 : target);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -163,7 +163,7 @@ class _homescreenState extends State<homescreen> {
           color: Colors.green,
         ),
         const SizedBox(height: 5),
-        Text('\$$saved of \$$target saved',
+        Text('£$saved of £$target saved',
             style: const TextStyle(color: Colors.grey)),
       ],
     );
@@ -179,13 +179,21 @@ class _homescreenState extends State<homescreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Upcoming Shifts',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Upcoming Shifts',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 15),
-            ...shifts
-                .map((shift) => _buildShiftCard(shift['Date'], shift['sTime'],
-                    shift['eTime'], shift['Job_title']))
-                .toList(),
+            ...shifts.map((shift) {
+              final jobShift = shift as job;
+              final date = jobShift.date?.toString() ?? '';
+              final startTime = jobShift.startTime ?? '';
+              final endTime = jobShift.endTime ?? '';
+              final title = jobShift.title;
+              ;
+
+              return _buildShiftCard(date, startTime, endTime, title);
+            }).toList(),
           ],
         ),
       ),
@@ -212,18 +220,14 @@ class _homescreenState extends State<homescreen> {
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Welcome Back,',
-                  style: TextStyle(fontSize: 16, color: Colors.blueGrey),
-                ),
-                const Text(
-                  'Jay',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue),
-                ),
+              children: const [
+                Text('Welcome Back,',
+                    style: TextStyle(fontSize: 16, color: Colors.blueGrey)),
+                Text('Jay',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue)),
               ],
             ),
           ],
@@ -239,7 +243,7 @@ class _homescreenState extends State<homescreen> {
               (route) => false,
             );
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("Logged out successfully"),
                 backgroundColor: Colors.green,
               ),

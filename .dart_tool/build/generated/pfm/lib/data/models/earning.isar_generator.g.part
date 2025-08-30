@@ -1,0 +1,742 @@
+// **************************************************************************
+// IsarCollectionGenerator
+// **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetEarningCollection on Isar {
+  IsarCollection<Earning> get earnings => this.collection();
+}
+
+const EarningSchema = CollectionSchema(
+  name: r'Earning',
+  id: -3527769911545180516,
+  properties: {
+    r'amount': PropertySchema(
+      id: 0,
+      name: r'amount',
+      type: IsarType.double,
+    ),
+    r'category': PropertySchema(
+      id: 1,
+      name: r'category',
+      type: IsarType.string,
+    ),
+    r'dateEarned': PropertySchema(
+      id: 2,
+      name: r'dateEarned',
+      type: IsarType.dateTime,
+    ),
+    r'jobId': PropertySchema(
+      id: 3,
+      name: r'jobId',
+      type: IsarType.long,
+    )
+  },
+  estimateSize: _earningEstimateSize,
+  serialize: _earningSerialize,
+  deserialize: _earningDeserialize,
+  deserializeProp: _earningDeserializeProp,
+  idName: r'id',
+  indexes: {},
+  links: {},
+  embeddedSchemas: {},
+  getId: _earningGetId,
+  getLinks: _earningGetLinks,
+  attach: _earningAttach,
+  version: '3.1.0+1',
+);
+
+int _earningEstimateSize(
+  Earning object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.category.length * 3;
+  return bytesCount;
+}
+
+void _earningSerialize(
+  Earning object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeDouble(offsets[0], object.amount);
+  writer.writeString(offsets[1], object.category);
+  writer.writeDateTime(offsets[2], object.dateEarned);
+  writer.writeLong(offsets[3], object.jobId);
+}
+
+Earning _earningDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = Earning();
+  object.amount = reader.readDouble(offsets[0]);
+  object.category = reader.readString(offsets[1]);
+  object.dateEarned = reader.readDateTime(offsets[2]);
+  object.id = id;
+  object.jobId = reader.readLongOrNull(offsets[3]);
+  return object;
+}
+
+P _earningDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readDouble(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    case 3:
+      return (reader.readLongOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _earningGetId(Earning object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _earningGetLinks(Earning object) {
+  return [];
+}
+
+void _earningAttach(IsarCollection<dynamic> col, Id id, Earning object) {
+  object.id = id;
+}
+
+extension EarningQueryWhereSort on QueryBuilder<Earning, Earning, QWhere> {
+  QueryBuilder<Earning, Earning, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension EarningQueryWhere on QueryBuilder<Earning, Earning, QWhereClause> {
+  QueryBuilder<Earning, Earning, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterWhereClause> idGreaterThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension EarningQueryFilter
+    on QueryBuilder<Earning, Earning, QFilterCondition> {
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> amountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'amount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> amountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'amount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> amountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'amount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> amountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'amount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'category',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'category',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> categoryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> dateEarnedEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dateEarned',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> dateEarnedGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dateEarned',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> dateEarnedLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dateEarned',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> dateEarnedBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dateEarned',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> jobIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'jobId',
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> jobIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'jobId',
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> jobIdEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'jobId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> jobIdGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'jobId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> jobIdLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'jobId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> jobIdBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'jobId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension EarningQueryObject
+    on QueryBuilder<Earning, Earning, QFilterCondition> {}
+
+extension EarningQueryLinks
+    on QueryBuilder<Earning, Earning, QFilterCondition> {}
+
+extension EarningQuerySortBy on QueryBuilder<Earning, Earning, QSortBy> {
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'amount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'amount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByDateEarned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateEarned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByDateEarnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateEarned', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByJobId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'jobId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByJobIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'jobId', Sort.desc);
+    });
+  }
+}
+
+extension EarningQuerySortThenBy
+    on QueryBuilder<Earning, Earning, QSortThenBy> {
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'amount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'amount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByDateEarned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateEarned', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByDateEarnedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dateEarned', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByJobId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'jobId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByJobIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'jobId', Sort.desc);
+    });
+  }
+}
+
+extension EarningQueryWhereDistinct
+    on QueryBuilder<Earning, Earning, QDistinct> {
+  QueryBuilder<Earning, Earning, QDistinct> distinctByAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'amount');
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QDistinct> distinctByCategory(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'category', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QDistinct> distinctByDateEarned() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dateEarned');
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QDistinct> distinctByJobId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'jobId');
+    });
+  }
+}
+
+extension EarningQueryProperty
+    on QueryBuilder<Earning, Earning, QQueryProperty> {
+  QueryBuilder<Earning, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Earning, double, QQueryOperations> amountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'amount');
+    });
+  }
+
+  QueryBuilder<Earning, String, QQueryOperations> categoryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'category');
+    });
+  }
+
+  QueryBuilder<Earning, DateTime, QQueryOperations> dateEarnedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dateEarned');
+    });
+  }
+
+  QueryBuilder<Earning, int?, QQueryOperations> jobIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'jobId');
+    });
+  }
+}

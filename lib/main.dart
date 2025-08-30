@@ -1,21 +1,23 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:pfm/data/local/local_db.dart';
 import 'package:pfm/screen/Auth/Login.dart';
 import 'package:pfm/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseurl = "http://127.0.0.1:8000";
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the local database (Isar)
+  await LocalDb.init();
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -42,27 +44,23 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     checkLoginStatus();
-    // Timer(
-    //     Duration(seconds: 2),
-    //     () => Navigator.pushReplacement(
-    //         context, MaterialPageRoute(builder: (context) => homescreen())));
   }
 
-// Checks login status from SharedPreferences.
+  /// Checks login status from SharedPreferences.
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    // Optionally delay to simulate a splash screen.
+    // Optional delay for splash effect
     await Future.delayed(const Duration(seconds: 1));
 
-    // Ensure that the widget is still mounted before navigating.
     if (!mounted) return;
 
+    // Navigate to home or login
     if (isLoggedIn) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const homescreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
       Navigator.pushReplacement(
@@ -76,8 +74,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      // child: FlutterLogo(size: MediaQuery.of(context).size.height));
-      child: Image.asset('assets/logo.png'),
+      child: Center(
+        child: Image.asset('assets/logo.png', width: 200, height: 200),
+      ),
     );
   }
 }

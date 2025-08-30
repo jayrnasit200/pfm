@@ -1,10 +1,11 @@
+// File: lib/screen/Spending.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pfm/NavigationBar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 const String baseurl = "http://127.0.0.1:8000";
@@ -20,11 +21,8 @@ class _SpendingState extends State<Spending> {
   DateTime _selectedDay = DateTime.now();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _descriptionController = TextEditingController();
-  TextEditingController _amountController = TextEditingController();
-  // Declare _selectedCategoryId as int?
+  final TextEditingController _amountController = TextEditingController();
   int? _selectedCategoryId;
-
-  // Store categories as a list of maps.
   List<Map<String, dynamic>> _categories = [];
 
   @override
@@ -34,26 +32,25 @@ class _SpendingState extends State<Spending> {
   }
 
   Future<void> _fetchCategories() async {
-    final response = await http.get(Uri.parse('$baseurl/api/categorylist'));
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonResponse = json.decode(response.body);
-      final List<dynamic> categories = jsonResponse['date'];
-      setState(() {
-        _descriptionController.text = "";
-        _amountController.text = "";
-        _selectedCategoryId = null;
-        _categories = categories.map((item) {
-          // Ensure that the id is treated as an int.
-          final id =
-              item['id'] is int ? item['id'] : int.parse(item['id'].toString());
-          return {
-            'id': id,
-            'name': item['name'].toString(),
-          };
-        }).toList();
-      });
-    } else {
-      // Handle error appropriately.
+    try {
+      final response = await http.get(Uri.parse('$baseurl/api/categorylist'));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final List<dynamic> categories = jsonResponse['data'];
+        setState(() {
+          _categories = categories.map((item) {
+            final id = item['id'] is int
+                ? item['id']
+                : int.parse(item['id'].toString());
+            return {
+              'id': id,
+              'name': item['name'].toString(),
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print("Error fetching categories: $e");
     }
   }
 
@@ -70,7 +67,7 @@ class _SpendingState extends State<Spending> {
             children: [
               _buildCalendar(),
               const SizedBox(height: 20),
-              Expanded(child: _buildHealthStats()),
+              Expanded(child: _buildSpendingList()),
             ],
           ),
         ),
@@ -88,15 +85,13 @@ class _SpendingState extends State<Spending> {
         setState(() {
           _selectedDay = selectedDay;
         });
-        _showDatePopup(context, selectedDay);
+        _showDatePopup(selectedDay);
       },
     );
   }
 
-  void _showDatePopup(BuildContext context, DateTime selectedDate) {
-    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-
-    // Reset fields to avoid old data being carried over
+  void _showDatePopup(DateTime selectedDate) {
+    final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     _amountController.clear();
     _descriptionController.clear();
     _selectedCategoryId = null;
@@ -114,44 +109,34 @@ class _SpendingState extends State<Spending> {
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Amount'),
                 keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter amount'
+                    : null,
               ),
               DropdownButtonFormField<int>(
                 value: _selectedCategoryId,
                 items: _categories.map((category) {
                   return DropdownMenuItem<int>(
                     value: category['id'],
-                    child: Text(category['name'].toString()),
+                    child: Text(category['name']),
                   );
                 }).toList(),
-                onChanged: (int? newValue) {
+                onChanged: (newValue) {
                   setState(() {
                     _selectedCategoryId = newValue;
                   });
                 },
                 decoration: const InputDecoration(labelText: 'Category'),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a category';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null ? 'Please select a category' : null,
               ),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter description'
+                    : null,
               ),
             ],
           ),
@@ -164,41 +149,7 @@ class _SpendingState extends State<Spending> {
           ElevatedButton(
             onPressed: () async {
               if (_formKey.currentState!.validate()) {
-                // Prepare the data for the API.
-                final amount = _amountController.text;
-                final description = _descriptionController.text;
-                final categoryId = _selectedCategoryId;
-                final prefs = await SharedPreferences.getInstance();
-                final userId = prefs.getInt('id');
-
-                final data = {
-                  'amount': amount,
-                  'cat_id': categoryId,
-                  'description': description,
-                  'user_id': userId?.toString() ?? "",
-                  'date': formattedDate,
-                };
-
-                final response = await http.post(
-                  Uri.parse('$baseurl/api/newspendings'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: json.encode(data),
-                );
-
-                if (response.statusCode == 200) {
-                  showSuccess(context, 'Spending Created successfully! 🎉');
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation1, animation2) =>
-                          Spending(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
-                } else {
-                  print("Error sending data: ${response.statusCode}");
-                }
+                await _addSpending(formattedDate);
               }
             },
             child: const Text("Save"),
@@ -208,83 +159,86 @@ class _SpendingState extends State<Spending> {
     );
   }
 
-  Future<List<dynamic>> _fetchSpendingsList() async {
+  Future<void> _addSpending(String date) async {
     final prefs = await SharedPreferences.getInstance();
-    var url = '$baseurl/api/spendingslist?id=' + prefs.getInt('id').toString();
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonResponse = json.decode(response.body);
-      // Assuming your API returns a JSON object with a key 'data' containing the list.
-      return jsonResponse['data'] as List<dynamic>;
+    final userId = prefs.getInt('id');
+    final data = {
+      'amount': _amountController.text,
+      'cat_id': _selectedCategoryId,
+      'description': _descriptionController.text,
+      'user_id': userId?.toString() ?? "",
+      'date': date,
+    };
+
+    final response = await http.post(
+      Uri.parse('$baseurl/api/newspendings'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(data),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      Navigator.pop(context);
+      _showSuccess('Spending created successfully! 🎉');
+      setState(() {});
     } else {
-      throw Exception('Failed to load spendings');
+      _showError('Failed to create spending');
     }
   }
 
-  Widget _buildHealthStats() {
+  Future<List<dynamic>> _fetchSpendings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('id');
+    final response = await http
+        .get(Uri.parse('$baseurl/api/spendingslist?id=${userId ?? 0}'));
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return jsonResponse['data'] as List<dynamic>;
+    } else {
+      return [];
+    }
+  }
+
+  Widget _buildSpendingList() {
     return FutureBuilder<List<dynamic>>(
-      future: _fetchSpendingsList(),
+      future: _fetchSpendings(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No spendings found'));
-        } else {
-          final spendings = snapshot.data!;
-          // Build a ListView using the fetched spendings.
-          return ListView.builder(
-            itemCount: spendings.length,
-            itemBuilder: (context, index) {
-              final spending = spendings[index];
-              // Adjust field names as per your API response.
-              return _buildStatCard(
-                spending['amount']?.toString() ?? 'amount',
-                spending['description']?.toString() ?? 'description',
-                spending['Date']?.toString() ?? 'date',
-                index,
-                spendings,
-              );
-            },
-          );
         }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No spendings found'));
+        }
+        final spendings = snapshot.data!;
+        return ListView.builder(
+          itemCount: spendings.length,
+          itemBuilder: (context, index) {
+            final spending = spendings[index];
+            return _buildSpendingCard(spending);
+          },
+        );
       },
     );
   }
 
-  Widget _buildStatCard(String amount, String value, String date, int index,
-      List<dynamic> spendings) {
+  Widget _buildSpendingCard(Map<String, dynamic> spending) {
+    final date = spending['date'] ?? '';
+    final formattedDate =
+        DateFormat.yMMMMd().format(DateFormat('yyyy-MM-dd').parse(date));
+
     return Slidable(
-      key: ValueKey(spendings[index]['id']), // Unique key for each item
+      key: ValueKey(spending['id']),
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
           SlidableAction(
-            onPressed: (context) => _editSpending(spendings[index]['id']),
+            onPressed: (context) => _editSpending(spending['id']),
             backgroundColor: Colors.blue.shade50,
             foregroundColor: Colors.black,
             icon: Icons.edit,
             label: 'Edit',
           ),
           SlidableAction(
-            onPressed: (context) async {
-              final spendingId = spendings[index]['id'];
-              spendings.removeAt(index);
-
-              final response = await http.get(
-                Uri.parse('$baseurl/api/spendingsdeleted/$spendingId'),
-              );
-
-              if (response.statusCode == 200) {
-                showSuccess(context, 'Spending deleted successfully! 🎉');
-                setState(() {}); // Refresh UI
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to delete spending')),
-                );
-              }
-            },
+            onPressed: (context) => _deleteSpending(spending['id']),
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,
             icon: Icons.delete,
@@ -306,17 +260,15 @@ class _SpendingState extends State<Spending> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("£ " + amount,
+                Text("£ ${spending['amount']}",
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(
-                    DateFormat.yMMMMd()
-                        .format(DateFormat("yyyy-MM-dd").parse(date)),
-                    style: const TextStyle(color: Colors.blue)),
+                Text(formattedDate, style: const TextStyle(color: Colors.blue)),
               ],
             ),
             const SizedBox(height: 5),
-            Text(value, style: const TextStyle(color: Colors.grey)),
+            Text(spending['description'] ?? '',
+                style: const TextStyle(color: Colors.grey)),
           ],
         ),
       ),
@@ -324,30 +276,16 @@ class _SpendingState extends State<Spending> {
   }
 
   Future<void> _editSpending(int spendingId) async {
-    try {
-      final response =
-          await http.get(Uri.parse('$baseurl/api/spendingedit/$spendingId'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        // print(data['data']['amount']);
-        // Pre-fill fields with existing data
-        setState(() {
-          _amountController.text = data['data']['amount'].toString();
-          _descriptionController.text = data['data']['description'];
-          _selectedCategoryId = data['data']['cat_id'];
-        });
-
-        // Show the Edit Dialog
-        _showEditDialog(spendingId);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch spending details')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+    final response =
+        await http.get(Uri.parse('$baseurl/api/spendingedit/$spendingId'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body)['data'];
+      _amountController.text = data['amount'].toString();
+      _descriptionController.text = data['description'];
+      _selectedCategoryId = data['cat_id'];
+      _showEditDialog(spendingId);
+    } else {
+      _showError('Failed to fetch spending details');
     }
   }
 
@@ -365,100 +303,91 @@ class _SpendingState extends State<Spending> {
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Amount'),
                 keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter amount'
+                    : null,
               ),
               DropdownButtonFormField<int>(
                 value: _selectedCategoryId,
-                items: _categories.map((category) {
+                items: _categories.map((c) {
                   return DropdownMenuItem<int>(
-                    value: category['id'],
-                    child: Text(category['name'].toString()),
+                    value: c['id'],
+                    child: Text(c['name']),
                   );
                 }).toList(),
-                onChanged: (int? newValue) {
-                  setState(() {
-                    _selectedCategoryId = newValue;
-                  });
-                },
+                onChanged: (v) => setState(() => _selectedCategoryId = v),
                 decoration: const InputDecoration(labelText: 'Category'),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a category';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null ? 'Please select category' : null,
               ),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter description'
+                    : null,
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
           ElevatedButton(
-            onPressed: () => _updateSpending(spendingId),
-            child: const Text("Update"),
-          ),
+              onPressed: () => _updateSpending(spendingId),
+              child: const Text("Update")),
         ],
       ),
     );
   }
 
   Future<void> _updateSpending(int spendingId) async {
-    if (_formKey.currentState!.validate()) {
-      final updatedData = {
-        'id': spendingId,
-        'amount': _amountController.text,
-        'cat_id': _selectedCategoryId,
-        'description': _descriptionController.text,
-      };
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        final response = await http.post(
-          Uri.parse('$baseurl/api/spendingsupdate'),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(updatedData),
-        );
-        // print(response.body);
-        if (response.statusCode == 200) {
-          Navigator.pop(context); // Close the dialog
-          showSuccess(context, 'Spending Updated successfully! 🎉');
+    final data = {
+      'id': spendingId,
+      'amount': _amountController.text,
+      'cat_id': _selectedCategoryId,
+      'description': _descriptionController.text,
+    };
 
-          setState(() {}); // Refresh the list
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update spending')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+    final response = await http.post(
+      Uri.parse('$baseurl/api/spendingsupdate'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(data),
+    );
+
+    if (response.statusCode == 200) {
+      Navigator.pop(context);
+      _showSuccess('Spending updated successfully! 🎉');
+      setState(() {});
+    } else {
+      _showError('Failed to update spending');
     }
   }
-}
 
-void showSuccess(BuildContext context, String message) {
-  // if (!mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), backgroundColor: Colors.green),
-  );
+  Future<void> _deleteSpending(int spendingId) async {
+    final response =
+        await http.get(Uri.parse('$baseurl/api/spendingsdeleted/$spendingId'));
+    if (response.statusCode == 200) {
+      _showSuccess('Spending deleted successfully! 🎉');
+      setState(() {});
+    } else {
+      _showError('Failed to delete spending');
+    }
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
 }

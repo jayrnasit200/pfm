@@ -61,7 +61,8 @@ class _NavigationBarsState extends State<NavigationBars> {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => earning(),
+                pageBuilder: (context, animation1, animation2) =>
+                    EarningScreen(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
@@ -91,7 +92,7 @@ class _NavigationBarsState extends State<NavigationBars> {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => homescreen(),
+                pageBuilder: (context, animation1, animation2) => HomeScreen(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),

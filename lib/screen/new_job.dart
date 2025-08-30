@@ -1,13 +1,13 @@
+// lib/screen/new_job_screen.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-const String baseurl = "http://127.0.0.1:8000"; // Change as needed
+import 'package:isar/isar.dart';
+import 'package:pfm/data/local/local_db.dart';
+import 'package:pfm/data/models/job.dart';
+import 'package:pfm/screen/joblist.dart';
 
 class NewJobScreen extends StatefulWidget {
-  final Map<String, dynamic>? jobData;
+  final job? jobData;
 
   const NewJobScreen({super.key, this.jobData});
 
@@ -21,15 +21,21 @@ class _NewJobScreenState extends State<NewJobScreen> {
   final TextEditingController payRateController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   bool isLoading = false;
+  job? _jobDetails;
 
   @override
   void initState() {
     super.initState();
     if (widget.jobData != null) {
-      jobTitleController.text = widget.jobData!['jobTitle'] ?? "";
-      payRateController.text = widget.jobData!['hourlyPay']?.toString() ?? "";
-      descriptionController.text = widget.jobData!['description'] ?? "";
+      _jobDetails = widget.jobData;
+      _populateFields();
     }
+  }
+
+  void _populateFields() {
+    jobTitleController.text = _jobDetails?.title ?? "";
+    payRateController.text = _jobDetails?.payRate.toString() ?? "";
+    descriptionController.text = _jobDetails?.description ?? "";
   }
 
   Future<void> _saveJob() async {
@@ -38,31 +44,43 @@ class _NewJobScreenState extends State<NewJobScreen> {
     setState(() => isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      int? userId = prefs.getInt('id');
-      final response = await http.post(
-        Uri.parse('$baseurl/api/createjob'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "Jobtitle": jobTitleController.text,
-          "payrate": double.tryParse(payRateController.text) ?? 0.0,
-          "description": descriptionController.text,
-          "user_id": userId,
-        }),
-      );
-      // print(response.body);
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("Job saved successfully"),
-              backgroundColor: Colors.green),
-        );
-        Navigator.pop(context, true); // Close the screen on success
+      final db = LocalDb.isar;
+
+      if (_jobDetails != null) {
+        // Update existing job
+        final updatedJob = _jobDetails!
+          ..title = jobTitleController.text
+          ..payRate = double.tryParse(payRateController.text) ?? 0.0
+          ..description = descriptionController.text;
+
+        await db.writeTxn(() async {
+          await db.jobs.put(updatedJob);
+        });
       } else {
-        _showError("Failed to save job. Try again.");
+        // Create new job
+        final newJob = job()
+          ..title = jobTitleController.text
+          ..payRate = double.tryParse(payRateController.text) ?? 0.0
+          ..description = descriptionController.text;
+
+        await db.writeTxn(() async {
+          await db.jobs.put(newJob);
+        });
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Job saved successfully"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const JobListScreen()),
+      );
     } catch (e) {
-      _showError("Error: $e");
+      _showError("Error saving job: $e");
     }
 
     setState(() => isLoading = false);
@@ -76,7 +94,7 @@ class _NewJobScreenState extends State<NewJobScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool isEditing = widget.jobData != null;
+    bool isEditing = _jobDetails != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -127,8 +145,7 @@ class _NewJobScreenState extends State<NewJobScreen> {
             controller: payRateController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d*\.?\d*$')), // Only allows numbers & decimals
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
             ],
             validator: (value) {
               if (value == null || value.isEmpty) return "Pay rate is required";

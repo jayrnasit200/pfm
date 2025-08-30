@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
+import 'package:pfm/data/models/job.dart' as JobModel;
 import 'package:pfm/screen/jobedit.dart';
 import 'package:pfm/screen/new_job.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-const String baseurl = "http://127.0.0.1:8000";
+import 'package:pfm/data/local/local_db.dart';
 
 class JobListScreen extends StatefulWidget {
   const JobListScreen({Key? key}) : super(key: key);
@@ -15,47 +13,27 @@ class JobListScreen extends StatefulWidget {
 }
 
 class _JobListScreenState extends State<JobListScreen> {
-  List<Map<String, dynamic>> jobs = [];
+  List<JobModel.job> jobs = [];
   bool isLoading = false;
   String errorMsg = '';
 
   @override
   void initState() {
     super.initState();
-    fetchJobs();
+    _fetchJobs();
   }
 
-  Future<void> fetchJobs() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> _fetchJobs() async {
+    setState(() => isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('id');
-    if (userId == null) {
+    try {
+      final db = LocalDb.isar;
+      final allJobs = await db.jobs.where().findAll();
+
       setState(() {
-        errorMsg = "User ID not found.";
+        jobs = allJobs.cast<JobModel.job>();
         isLoading = false;
       });
-      return;
-    }
-
-    var url = '$baseurl/api/getjob?id=$userId';
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        List<dynamic> data = jsonResponse['data'];
-        setState(() {
-          jobs = data.map((job) => job as Map<String, dynamic>).toList();
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMsg = "Failed to load jobs. Status Code: ${response.statusCode}";
-          isLoading = false;
-        });
-      }
     } catch (e) {
       setState(() {
         errorMsg = "Error fetching jobs: $e";
@@ -85,26 +63,29 @@ class _JobListScreenState extends State<JobListScreen> {
                           margin: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 6),
                           child: ListTile(
-                            title: Text(job['Job_title'] ?? "No Title"),
-                            subtitle: Text(
-                                job['Job_description'] ?? "No Description"),
+                            title: Text(job.title ?? "No Title"),
+                            subtitle: Text(job.description ?? "No Description"),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => Jobedit(job['id'])));
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => JobEdit(jobData: job),
+                                ),
+                              );
                             },
                           ),
                         );
                       },
                     ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => NewJobScreen()),
+            MaterialPageRoute(
+              builder: (context) => const NewJobScreen(),
+            ),
           );
         },
       ),

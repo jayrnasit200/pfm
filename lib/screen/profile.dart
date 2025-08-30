@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:pfm/NavigationBar.dart';
+import 'package:pfm/data/local/local_db.dart';
+import 'package:pfm/data/models/job.dart';
+import 'package:pfm/data/models/user.dart';
 import 'package:pfm/screen/Auth/Login.dart';
 import 'package:pfm/screen/GoalsList.dart';
-import 'package:pfm/screen/SetGoals.dart';
 import 'package:pfm/screen/contactinfo.dart';
 import 'package:pfm/screen/joblist.dart';
-import 'package:pfm/screen/rota.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-const String baseurl = "http://127.0.0.1:8000";
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -18,10 +17,29 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final db = LocalDb.isar;
+    final users = await db.users.where().findAll();
+    if (users.isNotEmpty) {
+      setState(() {
+        _user = users.first;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     final double swidth = size.width;
+
     return Scaffold(
       bottomNavigationBar: const NavigationBars("Profile"),
       body: SingleChildScrollView(
@@ -39,47 +57,15 @@ class _ProfileState extends State<Profile> {
               ),
             ),
             const SizedBox(height: 10),
-            // Text(
-            //   // 'User Name',
-            //   getLoginname().toString(),
-            //   style: Theme.of(context).textTheme.headlineMedium,
-            // ),
-            FutureBuilder<String>(
-              future: getLoginname(), // This returns Future<String>
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else if (snapshot.hasData) {
-                  return Text(
-                    snapshot.data!,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  );
-                } else {
-                  return const Text('No name found');
-                }
-              },
+            Text(
+              _user?.name ?? 'Guest',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 10),
-            FutureBuilder<String>(
-              future: getLoginemail(), // This returns Future<String>
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else if (snapshot.hasData) {
-                  return Text(
-                    snapshot.data!,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  );
-                } else {
-                  return const Text('No name found');
-                }
-              },
+            Text(
+              _user?.email ?? 'Guest',
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
-
             const SizedBox(height: 20),
             _buildProfileOption("Set Goals", Icons.flag, () {
               Navigator.push(
@@ -100,20 +86,22 @@ class _ProfileState extends State<Profile> {
               );
             }),
             _buildProfileOption("Logout", Icons.logout, () async {
-              // Implement logout functionality
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              await prefs.clear(); // Clear all stored user data
+              final db = LocalDb.isar;
+              await db.writeTxn(() async {
+                await db.users.clear();
+              });
 
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const Login()),
-                (route) => false, // Remove all previous routes
+                (route) => false,
               );
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text("Logged out successfully"),
-                    backgroundColor: Colors.green),
+                const SnackBar(
+                  content: Text("Logged out successfully"),
+                  backgroundColor: Colors.green,
+                ),
               );
             }),
           ],
@@ -133,16 +121,5 @@ class _ProfileState extends State<Profile> {
         onTap: onTap,
       ),
     );
-  }
-
-  Future<String> getLoginname() async {
-    final prefs = await SharedPreferences.getInstance();
-    print(prefs.getString('name'));
-    return prefs.getString('name') ?? 'Guest';
-  }
-
-  Future<String> getLoginemail() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('email') ?? 'Guest';
   }
 }

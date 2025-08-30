@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -13,8 +12,8 @@ class SetGoals extends StatefulWidget {
 }
 
 class _SetGoalsState extends State<SetGoals> {
-  TextEditingController goalNameController = TextEditingController();
-  TextEditingController amountController = TextEditingController();
+  final TextEditingController goalNameController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
   DateTime? selectedDate;
 
   Future<void> _pickDate(BuildContext context) async {
@@ -38,23 +37,26 @@ class _SetGoalsState extends State<SetGoals> {
         selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("Please fill all fields"),
-            backgroundColor: Colors.red),
+          content: Text("Please fill all fields"),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
-    final prefs = await SharedPreferences.getInstance();
 
-    int? userId =
-        prefs.getInt("id") ?? int.tryParse(prefs.getString("id") ?? "");
+    final prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt("id");
 
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("User ID not found"), backgroundColor: Colors.red),
+          content: Text("User ID not found"),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
+
     final url = Uri.parse("$baseurl/api/creategoals");
     final Map<String, dynamic> goalData = {
       "user_id": userId,
@@ -62,6 +64,7 @@ class _SetGoalsState extends State<SetGoals> {
       "target_amount": amountController.text,
       "deadline": selectedDate!.toIso8601String(),
     };
+
     try {
       final response = await http.post(
         url,
@@ -70,24 +73,27 @@ class _SetGoalsState extends State<SetGoals> {
       );
 
       if (response.statusCode == 200) {
-        // print(response.body);
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text("Goal saved successfully!"),
-              backgroundColor: Colors.green),
+            content: Text("Goal saved successfully!"),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text("Failed to save goal"),
-              backgroundColor: Colors.red),
+            content: Text("Failed to save goal"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -95,7 +101,10 @@ class _SetGoalsState extends State<SetGoals> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Set a Goal"), backgroundColor: Colors.blue),
+      appBar: AppBar(
+        title: Text("Set a Goal"),
+        backgroundColor: Colors.blue,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -110,7 +119,7 @@ class _SetGoalsState extends State<SetGoals> {
               controller: amountController,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(labelText: "Target Amount "),
+              decoration: InputDecoration(labelText: "Target Amount"),
             ),
             SizedBox(height: 10),
             ListTile(
@@ -123,10 +132,20 @@ class _SetGoalsState extends State<SetGoals> {
               onTap: () => _pickDate(context),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveGoal,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              child: Text("Save Goal", style: TextStyle(color: Colors.white)),
+            Center(
+              child: ElevatedButton(
+                onPressed: _saveGoal,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(
+                  "Save Goal",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
             ),
           ],
         ),
