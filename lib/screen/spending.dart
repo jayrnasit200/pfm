@@ -18,12 +18,19 @@ class Spending extends StatefulWidget {
 }
 
 class _SpendingState extends State<Spending> {
+  // Calendar State
   DateTime _selectedDay = DateTime.now();
+  CalendarFormat _calendarFormat =
+      CalendarFormat.month; // Handles expand/collapse
+
+  // Form State
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   int? _selectedCategoryId;
   List<Map<String, dynamic>> _categories = [];
+
+  final Color primaryBlue = Colors.blue;
 
   @override
   void initState() {
@@ -39,18 +46,17 @@ class _SpendingState extends State<Spending> {
         final List<dynamic> categories = jsonResponse['data'];
         setState(() {
           _categories = categories.map((item) {
-            final id = item['id'] is int
-                ? item['id']
-                : int.parse(item['id'].toString());
             return {
-              'id': id,
+              'id': item['id'] is int
+                  ? item['id']
+                  : int.parse(item['id'].toString()),
               'name': item['name'].toString(),
             };
           }).toList();
         });
       }
     } catch (e) {
-      print("Error fetching categories: $e");
+      debugPrint("Error fetching categories: $e");
     }
   }
 
@@ -58,18 +64,58 @@ class _SpendingState extends State<Spending> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: NavigationBars("Spending"),
+      bottomNavigationBar: const NavigationBars("Spending"),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCalendar(),
-              const SizedBox(height: 20),
-              Expanded(child: _buildSpendingList()),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section
+            Padding(
+              padding: const EdgeInsets.fromLTRB(25, 20, 25, 10),
+              child: Text(
+                "Spending Tracker",
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: primaryBlue.withOpacity(0.9)),
+              ),
+            ),
+
+            // Expandable Calendar Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: _buildCalendar(),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // List Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Transactions",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(DateFormat('MMMM yyyy').format(_selectedDay),
+                      style: TextStyle(
+                          color: primaryBlue, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Scrollable List Area
+            Expanded(child: _buildSpendingList()),
+          ],
         ),
       ),
     );
@@ -80,314 +126,326 @@ class _SpendingState extends State<Spending> {
       firstDay: DateTime.utc(2010, 10, 16),
       lastDay: DateTime.utc(2030, 3, 14),
       focusedDay: _selectedDay,
+
+      // LOGIC: These three lines enable the scroll up/down to see less/more
+      calendarFormat: _calendarFormat,
+      onFormatChanged: (format) => setState(() => _calendarFormat = format),
+      availableCalendarFormats: const {
+        CalendarFormat.month: 'Month',
+        CalendarFormat.twoWeeks: 'Compact',
+      },
+
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
       onDaySelected: (selectedDay, focusedDay) {
-        setState(() {
-          _selectedDay = selectedDay;
-        });
-        _showDatePopup(selectedDay);
+        setState(() => _selectedDay = selectedDay);
+        _showSpendingForm(selectedDay);
       },
-    );
-  }
 
-  void _showDatePopup(DateTime selectedDate) {
-    final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-    _amountController.clear();
-    _descriptionController.clear();
-    _selectedCategoryId = null;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Enter Spending Details"),
-        content: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Please enter amount'
-                    : null,
-              ),
-              DropdownButtonFormField<int>(
-                value: _selectedCategoryId,
-                items: _categories.map((category) {
-                  return DropdownMenuItem<int>(
-                    value: category['id'],
-                    child: Text(category['name']),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedCategoryId = newValue;
-                  });
-                },
-                decoration: const InputDecoration(labelText: 'Category'),
-                validator: (value) =>
-                    value == null ? 'Please select a category' : null,
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Please enter description'
-                    : null,
-              ),
-            ],
-          ),
+      // Styling
+      calendarStyle: CalendarStyle(
+        selectedDecoration:
+            BoxDecoration(color: primaryBlue, shape: BoxShape.circle),
+        todayDecoration: BoxDecoration(
+            color: primaryBlue.withOpacity(0.3), shape: BoxShape.circle),
+        markerDecoration:
+            BoxDecoration(color: primaryBlue, shape: BoxShape.circle),
+      ),
+      headerStyle: HeaderStyle(
+        formatButtonVisible: true,
+        titleCentered: true,
+        formatButtonDecoration: BoxDecoration(
+          color: primaryBlue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                await _addSpending(formattedDate);
-              }
-            },
-            child: const Text("Save"),
-          ),
-        ],
+        formatButtonTextStyle:
+            TextStyle(color: primaryBlue, fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  Future<void> _addSpending(String date) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id');
-    final data = {
-      'amount': _amountController.text,
-      'cat_id': _selectedCategoryId,
-      'description': _descriptionController.text,
-      'user_id': userId?.toString() ?? "",
-      'date': date,
-    };
-
-    final response = await http.post(
-      Uri.parse('$baseurl/api/newspendings'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(data),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      Navigator.pop(context);
-      _showSuccess('Spending created successfully! 🎉');
-      setState(() {});
+  void _showSpendingForm(DateTime selectedDate,
+      {Map<String, dynamic>? existingSpending}) {
+    final bool isEdit = existingSpending != null;
+    if (isEdit) {
+      _amountController.text = existingSpending['amount'].toString();
+      _descriptionController.text = existingSpending['description'] ?? '';
+      _selectedCategoryId = existingSpending['cat_id'];
     } else {
-      _showError('Failed to create spending');
+      _amountController.clear();
+      _descriptionController.clear();
+      _selectedCategoryId = null;
     }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 25,
+            right: 25,
+            top: 25),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10))),
+              const SizedBox(height: 20),
+              Text(isEdit ? "Edit Transaction" : "New Transaction",
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              _buildModernField(_amountController, "Amount (£)",
+                  Icons.attach_money_rounded, TextInputType.number),
+              const SizedBox(height: 15),
+              _buildCategoryDropdown(),
+              const SizedBox(height: 15),
+              _buildModernField(_descriptionController, "Description",
+                  Icons.description_outlined, TextInputType.text,
+                  maxLines: 2),
+              const SizedBox(height: 25),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => isEdit
+                      ? _updateSpending(existingSpending['id'])
+                      : _addSpending(
+                          DateFormat('yyyy-MM-dd').format(selectedDate)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    elevation: 0,
+                  ),
+                  child: Text(isEdit ? "UPDATE" : "SAVE TRANSACTION",
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  Future<List<dynamic>> _fetchSpendings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id');
-    final response = await http
-        .get(Uri.parse('$baseurl/api/spendingslist?id=${userId ?? 0}'));
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      return jsonResponse['data'] as List<dynamic>;
-    } else {
-      return [];
-    }
+  Widget _buildModernField(TextEditingController controller, String label,
+      IconData icon, TextInputType type,
+      {int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: type,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: primaryBlue.withOpacity(0.5)),
+        filled: true,
+        fillColor: primaryBlue.withOpacity(0.05),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none),
+      ),
+      validator: (v) => v!.isEmpty ? "Required" : null,
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return DropdownButtonFormField<int>(
+      value: _selectedCategoryId,
+      items: _categories
+          .map((c) =>
+              DropdownMenuItem<int>(value: c['id'], child: Text(c['name'])))
+          .toList(),
+      onChanged: (v) => setState(() => _selectedCategoryId = v),
+      decoration: InputDecoration(
+        labelText: "Category",
+        prefixIcon:
+            Icon(Icons.category_outlined, color: primaryBlue.withOpacity(0.5)),
+        filled: true,
+        fillColor: primaryBlue.withOpacity(0.05),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none),
+      ),
+      validator: (v) => v == null ? "Select Category" : null,
+    );
   }
 
   Widget _buildSpendingList() {
     return FutureBuilder<List<dynamic>>(
       future: _fetchSpendings(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No spendings found'));
-        }
-        final spendings = snapshot.data!;
+        if (!snapshot.hasData || snapshot.data!.isEmpty)
+          return _buildEmptyState();
+
         return ListView.builder(
-          itemCount: spendings.length,
-          itemBuilder: (context, index) {
-            final spending = spendings[index];
-            return _buildSpendingCard(spending);
-          },
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          itemCount: snapshot.data!.length,
+          itemBuilder: (context, index) =>
+              _buildSpendingCard(snapshot.data![index]),
         );
       },
     );
   }
 
   Widget _buildSpendingCard(Map<String, dynamic> spending) {
-    final date = spending['date'] ?? '';
-    final formattedDate =
-        DateFormat.yMMMMd().format(DateFormat('yyyy-MM-dd').parse(date));
-
-    return Slidable(
-      key: ValueKey(spending['id']),
-      startActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (context) => _editSpending(spending['id']),
-            backgroundColor: Colors.blue.shade50,
-            foregroundColor: Colors.black,
-            icon: Icons.edit,
-            label: 'Edit',
-          ),
-          SlidableAction(
-            onPressed: (context) => _deleteSpending(spending['id']),
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            icon: Icons.delete,
-            label: 'Delete',
-          ),
-        ],
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Slidable(
+        endActionPane: ActionPane(
+          motion: const ScrollMotion(),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("£ ${spending['amount']}",
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(formattedDate, style: const TextStyle(color: Colors.blue)),
-              ],
+            SlidableAction(
+              onPressed: (_) =>
+                  _showSpendingForm(_selectedDay, existingSpending: spending),
+              backgroundColor: primaryBlue.withOpacity(0.1),
+              foregroundColor: primaryBlue,
+              icon: Icons.edit,
+              borderRadius: BorderRadius.circular(15),
             ),
-            const SizedBox(height: 5),
-            Text(spending['description'] ?? '',
-                style: const TextStyle(color: Colors.grey)),
+            SlidableAction(
+              onPressed: (_) => _deleteSpending(spending['id']),
+              backgroundColor: Colors.redAccent.withOpacity(0.1),
+              foregroundColor: Colors.redAccent,
+              icon: Icons.delete,
+              borderRadius: BorderRadius.circular(15),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Future<void> _editSpending(int spendingId) async {
-    final response =
-        await http.get(Uri.parse('$baseurl/api/spendingedit/$spendingId'));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body)['data'];
-      _amountController.text = data['amount'].toString();
-      _descriptionController.text = data['description'];
-      _selectedCategoryId = data['cat_id'];
-      _showEditDialog(spendingId);
-    } else {
-      _showError('Failed to fetch spending details');
-    }
-  }
-
-  void _showEditDialog(int spendingId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edit Spending"),
-        content: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4))
+            ],
+          ),
+          child: Row(
             children: [
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Please enter amount'
-                    : null,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.shopping_bag_outlined,
+                    color: Colors.redAccent),
               ),
-              DropdownButtonFormField<int>(
-                value: _selectedCategoryId,
-                items: _categories.map((c) {
-                  return DropdownMenuItem<int>(
-                    value: c['id'],
-                    child: Text(c['name']),
-                  );
-                }).toList(),
-                onChanged: (v) => setState(() => _selectedCategoryId = v),
-                decoration: const InputDecoration(labelText: 'Category'),
-                validator: (value) =>
-                    value == null ? 'Please select category' : null,
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(spending['description'] ?? 'Spending',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(spending['date'] ?? '',
+                        style:
+                            TextStyle(color: Colors.grey[500], fontSize: 12)),
+                  ],
+                ),
               ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Please enter description'
-                    : null,
-              ),
+              Text("- £${spending['amount']}",
+                  style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16)),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
-          ElevatedButton(
-              onPressed: () => _updateSpending(spendingId),
-              child: const Text("Update")),
+      ),
+    );
+  }
+
+  // --- API Logic ---
+
+  Future<void> _addSpending(String date) async {
+    if (!_formKey.currentState!.validate()) return;
+    final prefs = await SharedPreferences.getInstance();
+    final data = {
+      'amount': _amountController.text,
+      'cat_id': _selectedCategoryId,
+      'description': _descriptionController.text,
+      'user_id': prefs.getInt('id').toString(),
+      'date': date,
+    };
+    final res = await http.post(Uri.parse('$baseurl/api/newspendings'),
+        headers: {'Content-Type': 'application/json'}, body: json.encode(data));
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      Navigator.pop(context);
+      _showSuccess('Spending saved! 🎉');
+      setState(() {});
+    }
+  }
+
+  Future<void> _updateSpending(int id) async {
+    if (!_formKey.currentState!.validate()) return;
+    final data = {
+      'id': id,
+      'amount': _amountController.text,
+      'cat_id': _selectedCategoryId,
+      'description': _descriptionController.text
+    };
+    final res = await http.post(Uri.parse('$baseurl/api/spendingsupdate'),
+        headers: {'Content-Type': 'application/json'}, body: json.encode(data));
+    if (res.statusCode == 200) {
+      Navigator.pop(context);
+      _showSuccess('Updated! 🎉');
+      setState(() {});
+    }
+  }
+
+  Future<void> _deleteSpending(int id) async {
+    final res = await http.get(Uri.parse('$baseurl/api/spendingsdeleted/$id'));
+    if (res.statusCode == 200) {
+      _showSuccess('Deleted!');
+      setState(() {});
+    }
+  }
+
+  Future<List<dynamic>> _fetchSpendings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt('id');
+    final res =
+        await http.get(Uri.parse('$baseurl/api/spendingslist?id=${id ?? 0}'));
+    return res.statusCode == 200 ? json.decode(res.body)['data'] : [];
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_long_outlined, size: 60, color: Colors.grey[200]),
+          const SizedBox(height: 10),
+          const Text("No transactions recorded",
+              style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
   }
 
-  Future<void> _updateSpending(int spendingId) async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final data = {
-      'id': spendingId,
-      'amount': _amountController.text,
-      'cat_id': _selectedCategoryId,
-      'description': _descriptionController.text,
-    };
-
-    final response = await http.post(
-      Uri.parse('$baseurl/api/spendingsupdate'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(data),
-    );
-
-    if (response.statusCode == 200) {
-      Navigator.pop(context);
-      _showSuccess('Spending updated successfully! 🎉');
-      setState(() {});
-    } else {
-      _showError('Failed to update spending');
-    }
-  }
-
-  Future<void> _deleteSpending(int spendingId) async {
-    final response =
-        await http.get(Uri.parse('$baseurl/api/spendingsdeleted/$spendingId'));
-    if (response.statusCode == 200) {
-      _showSuccess('Spending deleted successfully! 🎉');
-      setState(() {});
-    } else {
-      _showError('Failed to delete spending');
-    }
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
+  void _showSuccess(String msg) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating));
 }

@@ -5,48 +5,45 @@ import 'package:pfm/screen/Auth/%20signup.dart';
 import 'package:pfm/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseurl = "http://127.0.0.1:8000";
-
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
-  String get baseUrl => const String.fromEnvironment('BASE_URL');
 
   @override
   _LoginState createState() => _LoginState();
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  // Custom Color Base
+  final Color primaryBlue = Colors.blue;
 
   void login(BuildContext context, String email, String password) async {
-    // temp
-    // upDateSharedPreferences(1, 'jay', 'jay@jay.com');
-    // showSuccess(context, 'Login successful! 🎉');
-    // Navigator.pushReplacement(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => const homescreen()),
-    // );
     if (email.isEmpty || password.isEmpty) {
       showError(context, 'Please fill in all fields');
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
       final response = await http.post(
-        // Uri.parse(widget.baseUrl + '/api/login'),
-        Uri.parse('http://localhost:8000/api/login'),
+        Uri.parse('http://127.0.0.1:8000/api/login'),
         body: {'email': email, 'password': password},
-      );
+      ).timeout(const Duration(seconds: 10));
 
-      if (!mounted) return; // Avoid errors when widget is unmounted
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         var userdata = data['user'];
-        upDateSharedPreferences(
+
+        await upDateSharedPreferences(
             userdata['id'], userdata['name'], userdata['email']);
-        showSuccess(context, 'Login successful! 🎉');
+
+        showSuccess(context, 'Login successful!');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -55,59 +52,95 @@ class _LoginState extends State<Login> {
         showError(context, 'Invalid email or password');
       }
     } catch (e) {
-      // debugPrint(String.fromEnvironment('BASE_URL'));
-      debugPrint(e.toString());
-
-      // showError(context, String.fromEnvironment('genBaseUrl'));
-      showError(context, 'An error occurred, please try again');
+      showError(context, 'Server connection failed');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void upDateSharedPreferences(int id, String name, String email) async {
-    SharedPreferences _prefs = await SharedPreferences.getInstance();
-    // _prefs.setString('token', token);
-    _prefs.setInt('id', id);
-    _prefs.setString('name', name);
-    _prefs.setString('email', email);
-    _prefs.get('id');
+  Future<void> upDateSharedPreferences(
+      int id, String name, String email) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setInt('id', id);
+    await prefs.setString('name', name);
+    await prefs.setString('email', email);
   }
 
   void showError(BuildContext context, String message) {
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
   void showSuccess(BuildContext context, String message) {
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+      SnackBar(content: Text(message), backgroundColor: primaryBlue),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
+                // Header Icon with Opacity
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: primaryBlue.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.lock_person_rounded,
+                      size: 60, color: primaryBlue),
+                ),
+                const SizedBox(height: 30),
+                Text(
                   "Welcome Back",
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue.withOpacity(0.8)),
                 ),
                 const SizedBox(height: 8),
-                const Text("Enter your credentials to login",
-                    style: TextStyle(fontSize: 16, color: Colors.grey)),
-                const SizedBox(height: 32),
-                _inputField(),
+                Text(
+                  "Please sign in to continue",
+                  style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 40),
+
+                // Input Fields
+                _inputField(emailController, "Email Address",
+                    Icons.email_rounded, false),
+                const SizedBox(height: 16),
+                _inputField(passwordController, "Password",
+                    Icons.vpn_key_rounded, true),
+
+                // Forgot Password
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "Forgot Password?",
+                      style: TextStyle(
+                          color: primaryBlue.withOpacity(0.7),
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
+
+                // Login Button
                 _loginButton(),
-                _forgotPassword(),
+                const SizedBox(height: 25),
+
+                // Signup Link
                 _signupLink(context),
               ],
             ),
@@ -117,68 +150,59 @@ class _LoginState extends State<Login> {
     );
   }
 
-  Widget _inputField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: emailController,
-          decoration: InputDecoration(
-            hintText: "Email",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide.none,
-            ),
-            fillColor: Colors.blue.withOpacity(0.1),
-            filled: true,
-            prefixIcon: const Icon(Icons.email),
-          ),
+  Widget _inputField(TextEditingController controller, String hint,
+      IconData icon, bool isPassword) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: primaryBlue.withOpacity(0.4)),
+        prefixIcon: Icon(icon, color: primaryBlue.withOpacity(0.5)),
+        filled: true,
+        fillColor: primaryBlue.withOpacity(0.05), // Soft Blue Background
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: primaryBlue.withOpacity(0.1)),
         ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            hintText: "Password",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide.none,
-            ),
-            fillColor: Colors.blue.withOpacity(0.1),
-            filled: true,
-            prefixIcon: const Icon(Icons.lock),
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide:
+              BorderSide(color: primaryBlue.withOpacity(0.4), width: 1.5),
         ),
-      ],
+      ),
     );
   }
 
   Widget _loginButton() {
-    return ElevatedButton(
-      onPressed: () {
-        login(context, emailController.text.trim(),
-            passwordController.text.trim());
-      },
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        backgroundColor: Colors.blue,
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading
+            ? null
+            : () => login(context, emailController.text.trim(),
+                passwordController.text.trim()),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryBlue.withOpacity(0.9),
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : const Text("LOGIN",
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2)),
       ),
-      child: const Text("Login",
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          )),
-    );
-  }
-
-  Widget _forgotPassword() {
-    return TextButton(
-      onPressed: () {
-        showError(context, 'Forgot Password clicked');
-      },
-      child: const Text("Forgot password?",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
     );
   }
 
@@ -186,13 +210,15 @@ class _LoginState extends State<Login> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Don't have an account? "),
-        TextButton(
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const Signup()));
-          },
-          child: const Text("Sign Up", style: TextStyle(color: Colors.blue)),
+        Text("Don't have an account? ",
+            style: TextStyle(color: Colors.grey[600])),
+        GestureDetector(
+          onTap: () => Navigator.push(
+              context, MaterialPageRoute(builder: (context) => const Signup())),
+          child: Text(
+            "Sign Up",
+            style: TextStyle(color: primaryBlue, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );

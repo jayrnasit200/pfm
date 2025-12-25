@@ -17,25 +17,35 @@ const GoalSchema = CollectionSchema(
   name: r'Goal',
   id: 4693499363663894908,
   properties: {
-    r'deadline': PropertySchema(
+    r'createdAt': PropertySchema(
       id: 0,
+      name: r'createdAt',
+      type: IsarType.dateTime,
+    ),
+    r'deadline': PropertySchema(
+      id: 1,
       name: r'deadline',
       type: IsarType.dateTime,
     ),
     r'name': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'name',
       type: IsarType.string,
     ),
     r'savedAmount': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'savedAmount',
       type: IsarType.double,
     ),
     r'targetAmount': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'targetAmount',
       type: IsarType.double,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 5,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
     )
   },
   estimateSize: _goalEstimateSize,
@@ -68,10 +78,12 @@ void _goalSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.deadline);
-  writer.writeString(offsets[1], object.name);
-  writer.writeDouble(offsets[2], object.savedAmount);
-  writer.writeDouble(offsets[3], object.targetAmount);
+  writer.writeDateTime(offsets[0], object.createdAt);
+  writer.writeDateTime(offsets[1], object.deadline);
+  writer.writeString(offsets[2], object.name);
+  writer.writeDouble(offsets[3], object.savedAmount);
+  writer.writeDouble(offsets[4], object.targetAmount);
+  writer.writeDateTime(offsets[5], object.updatedAt);
 }
 
 Goal _goalDeserialize(
@@ -80,12 +92,15 @@ Goal _goalDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Goal();
-  object.deadline = reader.readDateTime(offsets[0]);
+  final object = Goal(
+    deadline: reader.readDateTime(offsets[1]),
+    name: reader.readString(offsets[2]),
+    savedAmount: reader.readDoubleOrNull(offsets[3]) ?? 0.0,
+    targetAmount: reader.readDouble(offsets[4]),
+  );
+  object.createdAt = reader.readDateTime(offsets[0]);
   object.id = id;
-  object.name = reader.readString(offsets[1]);
-  object.savedAmount = reader.readDouble(offsets[2]);
-  object.targetAmount = reader.readDouble(offsets[3]);
+  object.updatedAt = reader.readDateTime(offsets[5]);
   return object;
 }
 
@@ -99,11 +114,15 @@ P _goalDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readDoubleOrNull(offset) ?? 0.0) as P;
+    case 4:
       return (reader.readDouble(offset)) as P;
+    case 5:
+      return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -197,6 +216,59 @@ extension GoalQueryWhere on QueryBuilder<Goal, Goal, QWhereClause> {
 }
 
 extension GoalQueryFilter on QueryBuilder<Goal, Goal, QFilterCondition> {
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> createdAtEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> createdAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Goal, Goal, QAfterFilterCondition> deadlineEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -553,6 +625,59 @@ extension GoalQueryFilter on QueryBuilder<Goal, Goal, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> updatedAtEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterFilterCondition> updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension GoalQueryObject on QueryBuilder<Goal, Goal, QFilterCondition> {}
@@ -560,6 +685,18 @@ extension GoalQueryObject on QueryBuilder<Goal, Goal, QFilterCondition> {}
 extension GoalQueryLinks on QueryBuilder<Goal, Goal, QFilterCondition> {}
 
 extension GoalQuerySortBy on QueryBuilder<Goal, Goal, QSortBy> {
+  QueryBuilder<Goal, Goal, QAfterSortBy> sortByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterSortBy> sortByCreatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Goal, Goal, QAfterSortBy> sortByDeadline() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deadline', Sort.asc);
@@ -607,9 +744,33 @@ extension GoalQuerySortBy on QueryBuilder<Goal, Goal, QSortBy> {
       return query.addSortBy(r'targetAmount', Sort.desc);
     });
   }
+
+  QueryBuilder<Goal, Goal, QAfterSortBy> sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterSortBy> sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
 extension GoalQuerySortThenBy on QueryBuilder<Goal, Goal, QSortThenBy> {
+  QueryBuilder<Goal, Goal, QAfterSortBy> thenByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterSortBy> thenByCreatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Goal, Goal, QAfterSortBy> thenByDeadline() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deadline', Sort.asc);
@@ -669,9 +830,27 @@ extension GoalQuerySortThenBy on QueryBuilder<Goal, Goal, QSortThenBy> {
       return query.addSortBy(r'targetAmount', Sort.desc);
     });
   }
+
+  QueryBuilder<Goal, Goal, QAfterSortBy> thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Goal, Goal, QAfterSortBy> thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
 extension GoalQueryWhereDistinct on QueryBuilder<Goal, Goal, QDistinct> {
+  QueryBuilder<Goal, Goal, QDistinct> distinctByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'createdAt');
+    });
+  }
+
   QueryBuilder<Goal, Goal, QDistinct> distinctByDeadline() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'deadline');
@@ -696,12 +875,24 @@ extension GoalQueryWhereDistinct on QueryBuilder<Goal, Goal, QDistinct> {
       return query.addDistinctBy(r'targetAmount');
     });
   }
+
+  QueryBuilder<Goal, Goal, QDistinct> distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
 }
 
 extension GoalQueryProperty on QueryBuilder<Goal, Goal, QQueryProperty> {
   QueryBuilder<Goal, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Goal, DateTime, QQueryOperations> createdAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'createdAt');
     });
   }
 
@@ -726,6 +917,12 @@ extension GoalQueryProperty on QueryBuilder<Goal, Goal, QQueryProperty> {
   QueryBuilder<Goal, double, QQueryOperations> targetAmountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'targetAmount');
+    });
+  }
+
+  QueryBuilder<Goal, DateTime, QQueryOperations> updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
     });
   }
 }

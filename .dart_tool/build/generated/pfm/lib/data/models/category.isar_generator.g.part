@@ -72,9 +72,10 @@ Category _categoryDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Category();
+  final object = Category(
+    name: reader.readString(offsets[0]),
+  );
   object.id = id;
-  object.name = reader.readString(offsets[0]);
   return object;
 }
 

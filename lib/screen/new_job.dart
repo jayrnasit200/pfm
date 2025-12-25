@@ -7,7 +7,7 @@ import 'package:pfm/data/models/job.dart';
 import 'package:pfm/screen/joblist.dart';
 
 class NewJobScreen extends StatefulWidget {
-  final job? jobData;
+  final job? jobData; // Note: Ensure your model class is 'job' or 'Job'
 
   const NewJobScreen({super.key, this.jobData});
 
@@ -22,6 +22,8 @@ class _NewJobScreenState extends State<NewJobScreen> {
   final TextEditingController descriptionController = TextEditingController();
   bool isLoading = false;
   job? _jobDetails;
+
+  final Color primaryBlue = Colors.blue;
 
   @override
   void initState() {
@@ -40,14 +42,12 @@ class _NewJobScreenState extends State<NewJobScreen> {
 
   Future<void> _saveJob() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => isLoading = true);
 
     try {
       final db = LocalDb.isar;
 
       if (_jobDetails != null) {
-        // Update existing job
         final updatedJob = _jobDetails!
           ..title = jobTitleController.text
           ..payRate = double.tryParse(payRateController.text) ?? 0.0
@@ -57,7 +57,6 @@ class _NewJobScreenState extends State<NewJobScreen> {
           await db.jobs.put(updatedJob);
         });
       } else {
-        // Create new job
         final newJob = job()
           ..title = jobTitleController.text
           ..payRate = double.tryParse(payRateController.text) ?? 0.0
@@ -68,27 +67,25 @@ class _NewJobScreenState extends State<NewJobScreen> {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Job saved successfully"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showFeedback("Job saved successfully", Colors.green);
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const JobListScreen()),
       );
     } catch (e) {
-      _showError("Error saving job: $e");
+      _showFeedback("Error saving job: $e", Colors.red);
     }
-
     setState(() => isLoading = false);
   }
 
-  void _showError(String message) {
+  void _showFeedback(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color.withOpacity(0.8),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -97,19 +94,51 @@ class _NewJobScreenState extends State<NewJobScreen> {
     bool isEditing = _jobDetails != null;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(isEditing ? "Edit Job" : "Add New Job"),
-        backgroundColor: Colors.blue,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black87,
+        title: Text(isEditing ? "Edit Job" : "New Occupation",
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildJobCard(),
+              _buildSectionHeader("Basic Details"),
+              _buildModernTextField(
+                controller: jobTitleController,
+                label: "Job Title",
+                icon: Icons.work_outline_rounded,
+                hint: "e.g. Software Engineer",
+              ),
               const SizedBox(height: 20),
+              _buildModernTextField(
+                controller: payRateController,
+                label: "Hourly Pay (£)",
+                icon: Icons.payments_outlined,
+                hint: "0.00",
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                formatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$'))
+                ],
+              ),
+              const SizedBox(height: 25),
+              _buildSectionHeader("Information"),
+              _buildModernTextField(
+                controller: descriptionController,
+                label: "Description",
+                icon: Icons.notes_rounded,
+                hint: "What do you do at this job?",
+                maxLines: 4,
+              ),
+              const SizedBox(height: 40),
               _buildSaveButton(),
             ],
           ),
@@ -118,73 +147,77 @@ class _NewJobScreenState extends State<NewJobScreen> {
     );
   }
 
-  Widget _buildJobCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5, bottom: 10),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: primaryBlue.withOpacity(0.6),
+          letterSpacing: 1.1,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Job Title",
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
-          TextFormField(
-            controller: jobTitleController,
-            validator: (value) =>
-                value!.isEmpty ? "Job title is required" : null,
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          const Text("Hourly Pay",
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
-          TextFormField(
-            controller: payRateController,
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
-            ],
-            validator: (value) {
-              if (value == null || value.isEmpty) return "Pay rate is required";
-              final double? parsedValue = double.tryParse(value);
-              if (parsedValue == null) return "Enter a valid number";
-              return null;
-            },
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          const Text("Job Description",
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
-          TextFormField(
-            controller: descriptionController,
-            validator: (value) =>
-                value!.isEmpty ? "Description is required" : null,
-            decoration: const InputDecoration(border: InputBorder.none),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-        ],
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? formatters,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: primaryBlue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        inputFormatters: formatters,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon, color: primaryBlue.withOpacity(0.5)),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          labelStyle: TextStyle(color: primaryBlue.withOpacity(0.7)),
+        ),
+        validator: (value) => value!.isEmpty ? "$label is required" : null,
       ),
     );
   }
 
   Widget _buildSaveButton() {
-    return Center(
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: primaryBlue,
+          elevation: 0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         onPressed: isLoading ? null : _saveJob,
         child: isLoading
             ? const CircularProgressIndicator(color: Colors.white)
-            : const Text("Save",
-                style: TextStyle(color: Colors.white, fontSize: 16)),
+            : const Text(
+                "CONFIRM & SAVE",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1),
+              ),
       ),
     );
   }

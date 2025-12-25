@@ -20,6 +20,7 @@
         "isar",
         "isar_flutter_libs",
         "path_provider",
+        "provider",
         "shared_preferences",
         "table_calendar",
         "video_player"
@@ -1173,6 +1174,22 @@
       "name": "vm_service",
       "version": "15.0.2",
       "dependencies": []
+    },
+    {
+      "name": "provider",
+      "version": "6.1.5+1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "nested"
+      ]
+    },
+    {
+      "name": "nested",
+      "version": "1.0.0",
+      "dependencies": [
+        "flutter"
+      ]
     }
   ],
   "configVersion": 1

@@ -6,17 +6,31 @@ part 'expense.g.dart';
 class Expense {
   Id id = Isar.autoIncrement;
 
-  late String title;
-  late double amount;
+  String title;
+  double amount;
 
-  @Index() // enables fast range queries
-  late DateTime date;
-
-  // Store categoryId for simple fast filtering
   @Index()
-  late int categoryId;
+  DateTime date;
+
+  @Index()
+  int categoryId;
 
   String? note;
-  DateTime createdAt = DateTime.now();
-  DateTime updatedAt = DateTime.now();
+
+  DateTime createdAt;
+  DateTime updatedAt;
+
+  Expense({
+    required this.title,
+    required this.amount,
+    required this.date,
+    required this.categoryId,
+    this.note,
+  })  : createdAt = DateTime.now(),
+        updatedAt = DateTime.now();
+
+  /// Call this before saving updates
+  void touch() {
+    updatedAt = DateTime.now();
+  }
 }

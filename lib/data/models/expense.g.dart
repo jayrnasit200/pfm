@@ -131,14 +131,15 @@ Expense _expenseDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Expense();
-  object.amount = reader.readDouble(offsets[0]);
-  object.categoryId = reader.readLong(offsets[1]);
+  final object = Expense(
+    amount: reader.readDouble(offsets[0]),
+    categoryId: reader.readLong(offsets[1]),
+    date: reader.readDateTime(offsets[3]),
+    note: reader.readStringOrNull(offsets[4]),
+    title: reader.readString(offsets[5]),
+  );
   object.createdAt = reader.readDateTime(offsets[2]);
-  object.date = reader.readDateTime(offsets[3]);
   object.id = id;
-  object.note = reader.readStringOrNull(offsets[4]);
-  object.title = reader.readString(offsets[5]);
   object.updatedAt = reader.readDateTime(offsets[6]);
   return object;
 }

@@ -6,10 +6,23 @@ part 'goal.g.dart';
 class Goal {
   Id id = Isar.autoIncrement;
 
-  late String name;
-  late double targetAmount;
-  double savedAmount = 0.0;
+  String name;
+  double targetAmount;
+  double savedAmount;
+  DateTime deadline;
 
-  /// Added deadline field ✅
-  late DateTime deadline;
+  DateTime createdAt;
+  DateTime updatedAt;
+
+  Goal({
+    required this.name,
+    required this.targetAmount,
+    this.savedAmount = 0.0,
+    required this.deadline,
+  })  : createdAt = DateTime.now(),
+        updatedAt = DateTime.now();
+
+  void touch() {
+    updatedAt = DateTime.now();
+  }
 }
