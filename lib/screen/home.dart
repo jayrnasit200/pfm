@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double totalEarnings = 0.0;
   double totalSpending = 0.0;
   List<Goal> goals = [];
-  List<job> shifts = [];
+  List<Job> shifts = [];
   String userName = "User";
 
   final Color primaryBlue = Colors.blue;
@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
 
     final allGoals = await db.goals.where().findAll();
-    final allShifts = await db.jobs.where().findAll();
+    final allShifts = (await db.jobs.where().findAll()).cast<Job>();
     final allEarnings = await db.earnings.where().findAll();
 
     double earningsSum = allEarnings.fold(0.0, (sum, e) => sum + e.amount);
@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       userName = prefs.getString('name') ?? "User";
       goals = allGoals;
-      shifts = allShifts.cast<job>();
+      shifts = allShifts.cast<Job>();
       totalEarnings = earningsSum;
       totalSpending = 0.0; // Update this logic as your spending model grows
     });
@@ -255,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildShiftItem(job shift) {
+  Widget _buildShiftItem(Job shift) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pfm/data/models/spending.dart';
 
 import '../models/expense.dart';
 import '../models/category.dart';
@@ -10,6 +11,8 @@ import '../models/job.dart';
 import '../models/goal.dart';
 import '../models/earning.dart';
 import '../models/user.dart';
+import '../models/shift.dart'; // ✅ ADD THIS
+import '../models/Spending.dart'; // ✅ ADD THIS
 
 class LocalDb {
   static Isar? _isar;
@@ -23,11 +26,10 @@ class LocalDb {
   }
 
   static Future<void> init() async {
-    if (_isar != null) return; // prevent double open
+    if (_isar != null) return;
 
     try {
       if (kIsWeb) {
-        // WEB: no directory
         _isar = await Isar.open(
           [
             ExpenseSchema,
@@ -37,11 +39,12 @@ class LocalDb {
             JobSchema,
             GoalSchema,
             EarningSchema,
+            ShiftSchema,
+            SpendingSchema, // ✅ REQUIRED
           ],
           directory: '',
         );
       } else {
-        // MOBILE: use app directory
         final dir = await getApplicationDocumentsDirectory();
         _isar = await Isar.open(
           [
@@ -52,6 +55,7 @@ class LocalDb {
             JobSchema,
             GoalSchema,
             EarningSchema,
+            ShiftSchema, // ✅ REQUIRED
           ],
           directory: dir.path,
         );

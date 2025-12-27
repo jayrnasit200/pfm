@@ -36,6 +36,11 @@ const EarningSchema = CollectionSchema(
       id: 3,
       name: r'jobId',
       type: IsarType.long,
+    ),
+    r'status': PropertySchema(
+      id: 4,
+      name: r'status',
+      type: IsarType.string,
     )
   },
   estimateSize: _earningEstimateSize,
@@ -59,6 +64,7 @@ int _earningEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.category.length * 3;
+  bytesCount += 3 + object.status.length * 3;
   return bytesCount;
 }
 
@@ -72,6 +78,7 @@ void _earningSerialize(
   writer.writeString(offsets[1], object.category);
   writer.writeDateTime(offsets[2], object.dateEarned);
   writer.writeLong(offsets[3], object.jobId);
+  writer.writeString(offsets[4], object.status);
 }
 
 Earning _earningDeserialize(
@@ -86,6 +93,7 @@ Earning _earningDeserialize(
   object.dateEarned = reader.readDateTime(offsets[2]);
   object.id = id;
   object.jobId = reader.readLongOrNull(offsets[3]);
+  object.status = reader.readString(offsets[4]);
   return object;
 }
 
@@ -104,6 +112,8 @@ P _earningDeserializeProp<P>(
       return (reader.readDateTime(offset)) as P;
     case 3:
       return (reader.readLongOrNull(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -563,6 +573,136 @@ extension EarningQueryFilter
       ));
     });
   }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'status',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterFilterCondition> statusIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'status',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension EarningQueryObject
@@ -617,6 +757,18 @@ extension EarningQuerySortBy on QueryBuilder<Earning, Earning, QSortBy> {
   QueryBuilder<Earning, Earning, QAfterSortBy> sortByJobIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'jobId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> sortByStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.desc);
     });
   }
 }
@@ -682,6 +834,18 @@ extension EarningQuerySortThenBy
       return query.addSortBy(r'jobId', Sort.desc);
     });
   }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QAfterSortBy> thenByStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.desc);
+    });
+  }
 }
 
 extension EarningQueryWhereDistinct
@@ -708,6 +872,13 @@ extension EarningQueryWhereDistinct
   QueryBuilder<Earning, Earning, QDistinct> distinctByJobId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'jobId');
+    });
+  }
+
+  QueryBuilder<Earning, Earning, QDistinct> distinctByStatus(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'status', caseSensitive: caseSensitive);
     });
   }
 }
@@ -741,6 +912,12 @@ extension EarningQueryProperty
   QueryBuilder<Earning, int?, QQueryOperations> jobIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'jobId');
+    });
+  }
+
+  QueryBuilder<Earning, String, QQueryOperations> statusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'status');
     });
   }
 }

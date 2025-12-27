@@ -2,13 +2,21 @@ import 'package:isar/isar.dart';
 
 part 'earning.g.dart';
 
-@Collection()
+@collection
 class Earning {
   Id id = Isar.autoIncrement;
 
-  late String category;
   late double amount;
+
+  /// Optional job reference
+  int? jobId;
+
+  /// Label / note
+  late String category;
+
+  /// When earning was created
   late DateTime dateEarned;
 
-  int? jobId; // ✅ Added for filtering by job
+  /// REQUIRED: "pending" or "paid"
+  late String status;
 }

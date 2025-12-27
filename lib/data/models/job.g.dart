@@ -9,43 +9,53 @@ part of 'job.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetjobCollection on Isar {
-  IsarCollection<job> get jobs => this.collection();
+extension GetJobCollection on Isar {
+  IsarCollection<Job> get jobs => this.collection();
 }
 
 const JobSchema = CollectionSchema(
-  name: r'job',
-  id: -6283856943028449831,
+  name: r'Job',
+  id: -5961302972855324388,
   properties: {
-    r'date': PropertySchema(
+    r'createdAt': PropertySchema(
       id: 0,
+      name: r'createdAt',
+      type: IsarType.dateTime,
+    ),
+    r'date': PropertySchema(
+      id: 1,
       name: r'date',
       type: IsarType.dateTime,
     ),
     r'description': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'description',
       type: IsarType.string,
     ),
     r'endTime': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'endTime',
       type: IsarType.string,
     ),
     r'payRate': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'payRate',
       type: IsarType.double,
     ),
     r'startTime': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'startTime',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'title',
       type: IsarType.string,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 7,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
     )
   },
   estimateSize: _jobEstimateSize,
@@ -63,12 +73,17 @@ const JobSchema = CollectionSchema(
 );
 
 int _jobEstimateSize(
-  job object,
+  Job object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.description.length * 3;
+  {
+    final value = object.description;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   {
     final value = object.endTime;
     if (value != null) {
@@ -86,33 +101,38 @@ int _jobEstimateSize(
 }
 
 void _jobSerialize(
-  job object,
+  Job object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.date);
-  writer.writeString(offsets[1], object.description);
-  writer.writeString(offsets[2], object.endTime);
-  writer.writeDouble(offsets[3], object.payRate);
-  writer.writeString(offsets[4], object.startTime);
-  writer.writeString(offsets[5], object.title);
+  writer.writeDateTime(offsets[0], object.createdAt);
+  writer.writeDateTime(offsets[1], object.date);
+  writer.writeString(offsets[2], object.description);
+  writer.writeString(offsets[3], object.endTime);
+  writer.writeDouble(offsets[4], object.payRate);
+  writer.writeString(offsets[5], object.startTime);
+  writer.writeString(offsets[6], object.title);
+  writer.writeDateTime(offsets[7], object.updatedAt);
 }
 
-job _jobDeserialize(
+Job _jobDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = job();
-  object.date = reader.readDateTimeOrNull(offsets[0]);
-  object.description = reader.readString(offsets[1]);
-  object.endTime = reader.readStringOrNull(offsets[2]);
+  final object = Job(
+    date: reader.readDateTimeOrNull(offsets[1]),
+    description: reader.readStringOrNull(offsets[2]),
+    endTime: reader.readStringOrNull(offsets[3]),
+    payRate: reader.readDouble(offsets[4]),
+    startTime: reader.readStringOrNull(offsets[5]),
+    title: reader.readString(offsets[6]),
+  );
+  object.createdAt = reader.readDateTime(offsets[0]);
   object.id = id;
-  object.payRate = reader.readDouble(offsets[3]);
-  object.startTime = reader.readStringOrNull(offsets[4]);
-  object.title = reader.readString(offsets[5]);
+  object.updatedAt = reader.readDateTime(offsets[7]);
   return object;
 }
 
@@ -124,44 +144,48 @@ P _jobDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readDouble(offset)) as P;
-    case 4:
       return (reader.readStringOrNull(offset)) as P;
+    case 4:
+      return (reader.readDouble(offset)) as P;
     case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
       return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-Id _jobGetId(job object) {
+Id _jobGetId(Job object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _jobGetLinks(job object) {
+List<IsarLinkBase<dynamic>> _jobGetLinks(Job object) {
   return [];
 }
 
-void _jobAttach(IsarCollection<dynamic> col, Id id, job object) {
+void _jobAttach(IsarCollection<dynamic> col, Id id, Job object) {
   object.id = id;
 }
 
-extension jobQueryWhereSort on QueryBuilder<job, job, QWhere> {
-  QueryBuilder<job, job, QAfterWhere> anyId() {
+extension JobQueryWhereSort on QueryBuilder<Job, Job, QWhere> {
+  QueryBuilder<Job, Job, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension jobQueryWhere on QueryBuilder<job, job, QWhereClause> {
-  QueryBuilder<job, job, QAfterWhereClause> idEqualTo(Id id) {
+extension JobQueryWhere on QueryBuilder<Job, Job, QWhereClause> {
+  QueryBuilder<Job, Job, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: id,
@@ -170,7 +194,7 @@ extension jobQueryWhere on QueryBuilder<job, job, QWhereClause> {
     });
   }
 
-  QueryBuilder<job, job, QAfterWhereClause> idNotEqualTo(Id id) {
+  QueryBuilder<Job, Job, QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -192,7 +216,7 @@ extension jobQueryWhere on QueryBuilder<job, job, QWhereClause> {
     });
   }
 
-  QueryBuilder<job, job, QAfterWhereClause> idGreaterThan(Id id,
+  QueryBuilder<Job, Job, QAfterWhereClause> idGreaterThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -201,7 +225,7 @@ extension jobQueryWhere on QueryBuilder<job, job, QWhereClause> {
     });
   }
 
-  QueryBuilder<job, job, QAfterWhereClause> idLessThan(Id id,
+  QueryBuilder<Job, Job, QAfterWhereClause> idLessThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -210,7 +234,7 @@ extension jobQueryWhere on QueryBuilder<job, job, QWhereClause> {
     });
   }
 
-  QueryBuilder<job, job, QAfterWhereClause> idBetween(
+  QueryBuilder<Job, Job, QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -227,8 +251,61 @@ extension jobQueryWhere on QueryBuilder<job, job, QWhereClause> {
   }
 }
 
-extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
-  QueryBuilder<job, job, QAfterFilterCondition> dateIsNull() {
+extension JobQueryFilter on QueryBuilder<Job, Job, QFilterCondition> {
+  QueryBuilder<Job, Job, QAfterFilterCondition> createdAtEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> createdAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> dateIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
         property: r'date',
@@ -236,7 +313,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> dateIsNotNull() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> dateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
         property: r'date',
@@ -244,7 +321,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> dateEqualTo(DateTime? value) {
+  QueryBuilder<Job, Job, QAfterFilterCondition> dateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'date',
@@ -253,7 +330,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> dateGreaterThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> dateGreaterThan(
     DateTime? value, {
     bool include = false,
   }) {
@@ -266,7 +343,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> dateLessThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> dateLessThan(
     DateTime? value, {
     bool include = false,
   }) {
@@ -279,7 +356,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> dateBetween(
+  QueryBuilder<Job, Job, QAfterFilterCondition> dateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
@@ -296,8 +373,24 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionEqualTo(
-    String value, {
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'description',
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'description',
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionEqualTo(
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -309,8 +402,8 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionGreaterThan(
-    String value, {
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionGreaterThan(
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -324,8 +417,8 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionLessThan(
-    String value, {
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionLessThan(
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -339,9 +432,9 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionBetween(
-    String lower,
-    String upper, {
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionBetween(
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -358,7 +451,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionStartsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -371,7 +464,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionEndsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -384,7 +477,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionContains(
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionContains(
       String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -396,7 +489,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionMatches(
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionMatches(
       String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -408,7 +501,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionIsEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'description',
@@ -417,7 +510,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> descriptionIsNotEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> descriptionIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'description',
@@ -426,7 +519,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeIsNull() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
         property: r'endTime',
@@ -434,7 +527,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeIsNotNull() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
         property: r'endTime',
@@ -442,7 +535,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeEqualTo(
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeEqualTo(
     String? value, {
     bool caseSensitive = true,
   }) {
@@ -455,7 +548,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeGreaterThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -470,7 +563,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeLessThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -485,7 +578,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeBetween(
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -504,7 +597,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeStartsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -517,7 +610,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeEndsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -530,7 +623,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeContains(String value,
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
@@ -541,7 +634,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeMatches(String pattern,
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
@@ -552,7 +645,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeIsEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'endTime',
@@ -561,7 +654,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> endTimeIsNotEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> endTimeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'endTime',
@@ -570,7 +663,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> idEqualTo(Id value) {
+  QueryBuilder<Job, Job, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
@@ -579,7 +672,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> idGreaterThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> idGreaterThan(
     Id value, {
     bool include = false,
   }) {
@@ -592,7 +685,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> idLessThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> idLessThan(
     Id value, {
     bool include = false,
   }) {
@@ -605,7 +698,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> idBetween(
+  QueryBuilder<Job, Job, QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -622,7 +715,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> payRateEqualTo(
+  QueryBuilder<Job, Job, QAfterFilterCondition> payRateEqualTo(
     double value, {
     double epsilon = Query.epsilon,
   }) {
@@ -635,7 +728,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> payRateGreaterThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> payRateGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -650,7 +743,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> payRateLessThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> payRateLessThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -665,7 +758,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> payRateBetween(
+  QueryBuilder<Job, Job, QAfterFilterCondition> payRateBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -684,7 +777,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeIsNull() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
         property: r'startTime',
@@ -692,7 +785,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeIsNotNull() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
         property: r'startTime',
@@ -700,7 +793,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeEqualTo(
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeEqualTo(
     String? value, {
     bool caseSensitive = true,
   }) {
@@ -713,7 +806,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeGreaterThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -728,7 +821,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeLessThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -743,7 +836,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeBetween(
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -762,7 +855,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeStartsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -775,7 +868,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeEndsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -788,7 +881,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeContains(String value,
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
@@ -799,7 +892,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeMatches(String pattern,
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
@@ -810,7 +903,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeIsEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'startTime',
@@ -819,7 +912,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> startTimeIsNotEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> startTimeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'startTime',
@@ -828,7 +921,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleEqualTo(
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -841,7 +934,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleGreaterThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -856,7 +949,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleLessThan(
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -871,7 +964,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleBetween(
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -890,7 +983,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleStartsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -903,7 +996,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleEndsWith(
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -916,7 +1009,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleContains(String value,
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
@@ -927,7 +1020,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleMatches(String pattern,
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
@@ -938,7 +1031,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleIsEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'title',
@@ -947,7 +1040,7 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
     });
   }
 
-  QueryBuilder<job, job, QAfterFilterCondition> titleIsNotEmpty() {
+  QueryBuilder<Job, Job, QAfterFilterCondition> titleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'title',
@@ -955,254 +1048,379 @@ extension jobQueryFilter on QueryBuilder<job, job, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> updatedAtEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterFilterCondition> updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
-extension jobQueryObject on QueryBuilder<job, job, QFilterCondition> {}
+extension JobQueryObject on QueryBuilder<Job, Job, QFilterCondition> {}
 
-extension jobQueryLinks on QueryBuilder<job, job, QFilterCondition> {}
+extension JobQueryLinks on QueryBuilder<Job, Job, QFilterCondition> {}
 
-extension jobQuerySortBy on QueryBuilder<job, job, QSortBy> {
-  QueryBuilder<job, job, QAfterSortBy> sortByDate() {
+extension JobQuerySortBy on QueryBuilder<Job, Job, QSortBy> {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterSortBy> sortByCreatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterSortBy> sortByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByDateDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByDescription() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByDescriptionDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByEndTime() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByEndTimeDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByEndTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByPayRate() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByPayRate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payRate', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByPayRateDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByPayRateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payRate', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByStartTime() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByStartTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByStartTimeDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByStartTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByTitle() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> sortByTitleDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<Job, Job, QAfterSortBy> sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterSortBy> sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
-extension jobQuerySortThenBy on QueryBuilder<job, job, QSortThenBy> {
-  QueryBuilder<job, job, QAfterSortBy> thenByDate() {
+extension JobQuerySortThenBy on QueryBuilder<Job, Job, QSortThenBy> {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterSortBy> thenByCreatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterSortBy> thenByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByDateDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByDescription() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByDescriptionDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByEndTime() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByEndTimeDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByEndTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenById() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByIdDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByPayRate() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByPayRate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payRate', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByPayRateDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByPayRateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'payRate', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByStartTime() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByStartTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByStartTimeDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByStartTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startTime', Sort.desc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByTitle() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
     });
   }
 
-  QueryBuilder<job, job, QAfterSortBy> thenByTitleDesc() {
+  QueryBuilder<Job, Job, QAfterSortBy> thenByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<Job, Job, QAfterSortBy> thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Job, Job, QAfterSortBy> thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
-extension jobQueryWhereDistinct on QueryBuilder<job, job, QDistinct> {
-  QueryBuilder<job, job, QDistinct> distinctByDate() {
+extension JobQueryWhereDistinct on QueryBuilder<Job, Job, QDistinct> {
+  QueryBuilder<Job, Job, QDistinct> distinctByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'createdAt');
+    });
+  }
+
+  QueryBuilder<Job, Job, QDistinct> distinctByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'date');
     });
   }
 
-  QueryBuilder<job, job, QDistinct> distinctByDescription(
+  QueryBuilder<Job, Job, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'description', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<job, job, QDistinct> distinctByEndTime(
+  QueryBuilder<Job, Job, QDistinct> distinctByEndTime(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'endTime', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<job, job, QDistinct> distinctByPayRate() {
+  QueryBuilder<Job, Job, QDistinct> distinctByPayRate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'payRate');
     });
   }
 
-  QueryBuilder<job, job, QDistinct> distinctByStartTime(
+  QueryBuilder<Job, Job, QDistinct> distinctByStartTime(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'startTime', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<job, job, QDistinct> distinctByTitle(
+  QueryBuilder<Job, Job, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<Job, Job, QDistinct> distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
 }
 
-extension jobQueryProperty on QueryBuilder<job, job, QQueryProperty> {
-  QueryBuilder<job, int, QQueryOperations> idProperty() {
+extension JobQueryProperty on QueryBuilder<Job, Job, QQueryProperty> {
+  QueryBuilder<Job, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<job, DateTime?, QQueryOperations> dateProperty() {
+  QueryBuilder<Job, DateTime, QQueryOperations> createdAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<Job, DateTime?, QQueryOperations> dateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'date');
     });
   }
 
-  QueryBuilder<job, String, QQueryOperations> descriptionProperty() {
+  QueryBuilder<Job, String?, QQueryOperations> descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
     });
   }
 
-  QueryBuilder<job, String?, QQueryOperations> endTimeProperty() {
+  QueryBuilder<Job, String?, QQueryOperations> endTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'endTime');
     });
   }
 
-  QueryBuilder<job, double, QQueryOperations> payRateProperty() {
+  QueryBuilder<Job, double, QQueryOperations> payRateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'payRate');
     });
   }
 
-  QueryBuilder<job, String?, QQueryOperations> startTimeProperty() {
+  QueryBuilder<Job, String?, QQueryOperations> startTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'startTime');
     });
   }
 
-  QueryBuilder<job, String, QQueryOperations> titleProperty() {
+  QueryBuilder<Job, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<Job, DateTime, QQueryOperations> updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
     });
   }
 }

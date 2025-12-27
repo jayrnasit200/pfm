@@ -1,141 +1,132 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:isar/isar.dart';
+import 'package:pfm/data/local/local_db.dart';
+import 'package:pfm/data/models/shift.dart';
 import 'package:pfm/screen/rota.dart';
-
-const String baseurl = "http://127.0.0.1:8000";
 
 class RotaViewPage extends StatefulWidget {
   final int jobId;
-
-  RotaViewPage(this.jobId);
+  const RotaViewPage(this.jobId, {super.key});
 
   @override
-  _RotaViewPageState createState() => _RotaViewPageState();
+  State<RotaViewPage> createState() => _RotaViewPageState();
 }
 
 class _RotaViewPageState extends State<RotaViewPage> {
   bool isLoading = true;
-  List<dynamic> rotaRecords = [];
+  List<Shift> rotaRecords = [];
 
   @override
   void initState() {
     super.initState();
-    fetchRotaRecords();
+    _loadRota();
   }
 
-  Future<void> fetchRotaRecords() async {
-    try {
-      var response = await http.get(
-        Uri.parse("$baseurl/api/getrota?job=${widget.jobId}"),
-        headers: {'Content-Type': 'application/json'},
-      );
+  // ───────────────── LOAD FROM LOCAL DB ─────────────────
 
-      if (response.statusCode == 200) {
-        setState(() {
-          rotaRecords = jsonDecode(response.body);
-          isLoading = false;
-        });
-      } else {
-        setState(() => isLoading = false);
-        print("Failed to load rota records: ${response.statusCode}");
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      print("Error: $e");
-    }
+  Future<void> _loadRota() async {
+    final db = LocalDb.isar;
+
+    final data = await db.shifts
+        .filter()
+        .jobIdEqualTo(widget.jobId)
+        .sortByDate()
+        .findAll();
+
+    setState(() {
+      rotaRecords = data;
+      isLoading = false;
+    });
   }
 
-  Future<TimeOfDay?> _pickTime(
-      BuildContext context, TimeOfDay initialTime) async {
-    return await showTimePicker(context: context, initialTime: initialTime);
+  // ───────────────── TIME HELPERS ─────────────────
+
+  TimeOfDay _parseTime(String t) {
+    final p = t.split(":");
+    return TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1]));
   }
 
-  void _editRota(
-      int id, String startTime, String endTime, String date, String status) {
-    TimeOfDay selectedStartTime = _parseTime(startTime);
-    TimeOfDay selectedEndTime = _parseTime(endTime);
-    bool isCompleted = status.toLowerCase() == 'completed';
+  String _formatTime(TimeOfDay t) =>
+      "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
 
-    showDialog(
+  // ───────────────── EDIT / COMPLETE ─────────────────
+
+  void _editShift(Shift shift) {
+    TimeOfDay start = _parseTime(shift.startTime);
+    TimeOfDay end = _parseTime(shift.endTime);
+    bool isCompleted = shift.status == "completed";
+
+    showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text("Update Rota"),
-              content: Column(
+          builder: (context, setModal) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Date of Shift: $date"),
+                  const Text("Edit Shift",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Divider(),
                   ListTile(
-                    title: Text(
-                        "Start Time: ${selectedStartTime.format(context)}"),
-                    trailing: const Icon(Icons.access_time),
+                    title: const Text("Start Time"),
+                    subtitle: Text(start.format(context)),
                     onTap: () async {
-                      TimeOfDay? pickedTime =
-                          await _pickTime(context, selectedStartTime);
-                      if (pickedTime != null)
-                        setState(() => selectedStartTime = pickedTime);
+                      final picked = await showTimePicker(
+                          context: context, initialTime: start);
+                      if (picked != null) setModal(() => start = picked);
                     },
                   ),
                   ListTile(
-                    title: Text("End Time: ${selectedEndTime.format(context)}"),
-                    trailing: const Icon(Icons.access_time),
+                    title: const Text("End Time"),
+                    subtitle: Text(end.format(context)),
                     onTap: () async {
-                      TimeOfDay? pickedTime =
-                          await _pickTime(context, selectedEndTime);
-                      if (pickedTime != null)
-                        setState(() => selectedEndTime = pickedTime);
+                      final picked = await showTimePicker(
+                          context: context, initialTime: end);
+                      if (picked != null) setModal(() => end = picked);
                     },
                   ),
-                  Row(
-                    children: [
-                      const Text("Completed: "),
-                      Checkbox(
-                        value: isCompleted,
-                        onChanged: (bool? value) =>
-                            setState(() => isCompleted = value ?? false),
-                      ),
-                    ],
+                  SwitchListTile(
+                    title: const Text("Mark as Completed"),
+                    value: isCompleted,
+                    onChanged: (v) => setModal(() => isCompleted = v),
                   ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final db = LocalDb.isar;
+
+                        await db.writeTxn(() async {
+                          shift
+                            ..startTime = _formatTime(start)
+                            ..endTime = _formatTime(end)
+                            ..status = isCompleted ? "completed" : "planned";
+                          await db.shifts.put(shift);
+                        });
+
+                        Navigator.pop(context);
+                        _loadRota();
+                      },
+                      child: const Text("Save Changes"),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () async {
-                    String updatedStatus =
-                        isCompleted ? 'completed' : 'pending';
-                    try {
-                      var response = await http.post(
-                        Uri.parse("$baseurl/api/updaterotastatus"),
-                        headers: {'Content-Type': 'application/json'},
-                        body: jsonEncode({
-                          'id': id,
-                          'date': date,
-                          'startTime': _formatTime(selectedStartTime),
-                          'endTime': _formatTime(selectedEndTime),
-                          'status': updatedStatus,
-                          'jobid': widget.jobId,
-                        }),
-                      );
-                      if (response.statusCode == 200) {
-                        fetchRotaRecords();
-                        Navigator.pop(context);
-                      } else {
-                        print("Failed to update rota record");
-                      }
-                    } catch (e) {
-                      print("Error: $e");
-                    }
-                  },
-                  child: const Text("Submit"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
-                ),
-              ],
             );
           },
         );
@@ -143,84 +134,134 @@ class _RotaViewPageState extends State<RotaViewPage> {
     );
   }
 
-  TimeOfDay _parseTime(String time) {
-    List<String> parts = time.split(":");
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-  }
-
-  String _formatTime(TimeOfDay time) =>
-      "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
-
-  void _addRota() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => rotaScreen(widget.jobId)),
-    );
-  }
+  // ───────────────── UI ─────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
-        title: const Text("Rota View"),
-        backgroundColor: Colors.blue,
+        title: const Text("Shift Schedule",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _addRota,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => rotaScreen(widget.jobId)),
+            ).then((_) => _loadRota()),
           ),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : rotaRecords.isEmpty
-              ? const Center(child: Text("No rota records found"))
-              : ListView.builder(
-                  itemCount: rotaRecords.length,
-                  itemBuilder: (context, index) {
-                    var rota = rotaRecords[index];
-                    String date = rota['Date'];
-                    String startTime = rota['sTime'];
-                    String endTime = rota['eTime'];
-                    String status = rota['status'] ?? 'pending';
-
-                    if (status.toLowerCase() != "pending")
-                      return const SizedBox.shrink();
-
-                    return Card(
-                      elevation: 3,
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Date: $date",
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            Text("Start Time: $startTime"),
-                            Text("End Time: $endTime"),
-                            Text("Status: $status"),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () => _editRota(rota['id'],
-                                      startTime, endTime, date, status),
-                                  child: const Text("Update"),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+              ? const Center(child: Text("No shifts found"))
+              : RefreshIndicator(
+                  onRefresh: _loadRota,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: rotaRecords.length,
+                    itemBuilder: (_, i) => _buildShiftCard(rotaRecords[i]),
+                  ),
                 ),
+    );
+  }
+
+  Widget _buildShiftCard(Shift shift) {
+    final bool isCompleted = shift.status == "completed";
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    DateFormat('dd MMM yyyy').format(shift.date),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isCompleted ? "COMPLETED" : "PLANNED",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isCompleted ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Icon(
+                isCompleted
+                    ? Icons.check_circle_rounded
+                    : Icons.schedule_rounded,
+                color: isCompleted ? Colors.green : Colors.blueAccent,
+                size: 26,
+              ),
+            ],
+          ),
+          const Divider(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _timeColumn("START", shift.startTime),
+              const Icon(Icons.arrow_forward_rounded, size: 16),
+              _timeColumn("END", shift.endTime),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.edit, size: 20),
+              color: Colors.blueAccent,
+              onPressed: () => _editShift(shift),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _timeColumn(String label, String time) {
+    return Column(
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(time,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ],
     );
   }
 }

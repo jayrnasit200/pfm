@@ -17,7 +17,7 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   User? _user;
-  final Color primaryBlue = Colors.blue;
+  final Color primaryBlue = Colors.blueAccent;
 
   @override
   void initState() {
@@ -28,7 +28,7 @@ class _ProfileState extends State<Profile> {
   Future<void> _loadUser() async {
     final db = LocalDb.isar;
     final users = await db.users.where().findAll();
-    if (users.isNotEmpty) {
+    if (users.isNotEmpty && mounted) {
       setState(() {
         _user = users.first;
       });
@@ -38,41 +38,45 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FB), // Modern light grey background
       bottomNavigationBar: const NavigationBars("Profile"),
       body: SingleChildScrollView(
         child: Column(
           children: [
             _buildProfileHeader(),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionLabel("Account Settings"),
-                  _buildProfileOption("Set Financial Goals", Icons.flag_rounded,
-                      () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => GoalsList()));
-                  }),
+                  _sectionLabel("Financial Management"),
                   _buildProfileOption(
-                      "Employment / Jobs", Icons.work_outline_rounded, () {
-                    Navigator.push(
+                    "Savings & Goals",
+                    Icons.track_changes_rounded,
+                    () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const GoalsList())),
+                  ),
+                  _buildProfileOption(
+                    "Work & Employment",
+                    Icons.work_history_rounded,
+                    () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => JobListScreen()));
-                  }),
+                            builder: (_) => const JobListScreen())),
+                  ),
+                  const SizedBox(height: 24),
+                  _sectionLabel("Personal Details"),
                   _buildProfileOption(
-                      "Contact Information", Icons.contact_mail_outlined, () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => Contactinfo()));
-                  }),
-                  const SizedBox(height: 20),
-                  _sectionLabel("Security"),
+                    "Contact Information",
+                    Icons.alternate_email_rounded,
+                    () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const Contactinfo())),
+                  ),
+                  const SizedBox(height: 24),
+                  _sectionLabel("Account Safety"),
                   _buildProfileOption(
                     "Logout",
-                    Icons.logout_rounded,
+                    Icons.power_settings_new_rounded,
                     _handleLogout,
                     isDestructive: true,
                   ),
@@ -88,41 +92,61 @@ class _ProfileState extends State<Profile> {
   Widget _buildProfileHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 80, bottom: 40),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [primaryBlue.withOpacity(0.15), Colors.white],
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
+      padding: const EdgeInsets.only(top: 80, bottom: 40),
       child: Column(
         children: [
-          // Avatar with Blue Opacity ring
+          // Styled Avatar
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: primaryBlue.withOpacity(0.2), width: 2),
+              border: Border.all(color: primaryBlue.withOpacity(0.1), width: 4),
             ),
             child: CircleAvatar(
-              radius: 50,
-              backgroundColor: primaryBlue.withOpacity(0.1),
+              radius: 55,
+              backgroundColor: primaryBlue.withOpacity(0.05),
               backgroundImage: const NetworkImage(
-                "https://img.freepik.com/premium-vector/blue-circle-with-white-user-vector_941526-5765.jpg?semt=ais_hybrid",
+                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
               ),
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
           Text(
             _user?.name ?? 'Guest User',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: Colors.black87),
           ),
-          const SizedBox(height: 5),
-          Text(
-            _user?.email ?? 'Not signed in',
-            style: TextStyle(
-                fontSize: 14, color: Colors.grey[600], letterSpacing: 0.5),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: primaryBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _user?.email ?? 'Sign in to sync data',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: primaryBlue,
+              ),
+            ),
           ),
         ],
       ),
@@ -131,56 +155,87 @@ class _ProfileState extends State<Profile> {
 
   Widget _sectionLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(left: 10, bottom: 10),
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Text(
         text.toUpperCase(),
         style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: primaryBlue.withOpacity(0.6),
-            letterSpacing: 1.2),
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: Colors.grey.shade500,
+          letterSpacing: 1.5,
+        ),
       ),
     );
   }
 
   Widget _buildProfileOption(String title, IconData icon, VoidCallback onTap,
       {bool isDestructive = false}) {
-    final Color color = isDestructive ? Colors.redAccent : primaryBlue;
+    final Color iconColor = isDestructive ? Colors.redAccent : primaryBlue;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black.withOpacity(0.02)),
       ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: color, size: 22),
+          child: Icon(icon, color: iconColor, size: 22),
         ),
-        title: Text(title,
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDestructive ? Colors.redAccent : Colors.black87)),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: isDestructive ? Colors.redAccent : Colors.black87,
+          ),
+        ),
         trailing: Icon(
-          Icons.chevron_right_rounded,
-          color: color.withOpacity(0.3),
+          Icons.arrow_forward_ios_rounded,
+          color: Colors.grey.shade300,
+          size: 16,
         ),
       ),
     );
   }
 
   Future<void> _handleLogout() async {
+    // Confirmation Dialog before logging out
+    bool confirm = await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Logout"),
+            content: const Text(
+                "Are you sure you want to sign out? Your local data will be cleared."),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("Cancel")),
+              TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("Logout",
+                      style: TextStyle(color: Colors.red))),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirm) return;
+
     final db = LocalDb.isar;
     await db.writeTxn(() async {
       await db.users.clear();
+      // Optional: Clear other collections if logout means a total reset
+      // await db.goals.clear();
     });
 
     if (!mounted) return;
@@ -189,14 +244,6 @@ class _ProfileState extends State<Profile> {
       context,
       MaterialPageRoute(builder: (context) => const Login()),
       (route) => false,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text("Logged out successfully"),
-        backgroundColor: Colors.blue.withOpacity(0.8),
-        behavior: SnackBarBehavior.floating,
-      ),
     );
   }
 }

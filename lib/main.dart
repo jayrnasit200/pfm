@@ -15,7 +15,7 @@ Future<void> main() async {
   } catch (e) {
     debugPrint('Local DB init failed: $e');
   }
-
+  await LocalDb.init();
   runApp(const MyApp());
 }
 

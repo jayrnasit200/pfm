@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
+
 import 'package:pfm/NavigationBar.dart';
-import 'package:pfm/screen/new_job.dart';
 import 'package:pfm/data/local/local_db.dart';
 import 'package:pfm/data/models/earning.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:pfm/data/models/shift.dart';
 import 'package:pfm/data/models/job.dart';
-import 'package:intl/intl.dart';
 
 class EarningScreen extends StatefulWidget {
   const EarningScreen({super.key});
@@ -16,43 +16,223 @@ class EarningScreen extends StatefulWidget {
 }
 
 class _EarningScreenState extends State<EarningScreen> {
-  // Calendar State
-  DateTime _selectedDay = DateTime.now();
-  CalendarFormat _calendarFormat =
-      CalendarFormat.twoWeeks; // Start compact for Earnings
-
-  // Data State
-  String? _selectedJob = "all";
-  List<dynamic> jobList = [];
-  List<Earning> earningsList = [];
-
   final Color primaryBlue = Colors.blue;
+
+  int? selectedJobId;
+
+  List<Job> jobs = [];
+  List<Shift> pendingShifts = [];
+  List<Earning> earnings = [];
+
+  double pendingTotal = 0;
+  double monthTotal = 0;
+  double yearTotal = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadJobs();
+    _loadData();
   }
 
-  Future<void> _loadJobs() async {
+  // ───────────────── LOAD DATA ─────────────────
+
+  Future<void> _loadData() async {
     final db = LocalDb.isar;
-    final jobs = await db.jobs.where().findAll();
+
+    final jobData = await db.jobs.where().findAll();
+    final allEarnings = await db.earnings.where().findAll();
+    final completedShifts =
+        await db.shifts.filter().statusEqualTo("completed").findAll();
+
+    final filteredShifts = selectedJobId == null
+        ? completedShifts
+        : completedShifts.where((s) => s.jobId == selectedJobId).toList();
+
+    final now = DateTime.now();
+
+    double pending = 0;
+    for (final s in filteredShifts) {
+      pending += _shiftAmount(s, jobData);
+    }
+
+    double month = 0;
+    double year = 0;
+
+    for (final e in allEarnings) {
+      if (selectedJobId != null && e.jobId != selectedJobId) continue;
+
+      if (e.dateEarned.year == now.year) {
+        year += e.amount;
+        if (e.dateEarned.month == now.month) {
+          month += e.amount;
+        }
+      }
+    }
+
     setState(() {
-      jobList = jobs;
+      jobs = jobData;
+      earnings = allEarnings;
+      pendingShifts = filteredShifts;
+      pendingTotal = pending;
+      monthTotal = month;
+      yearTotal = year;
     });
-    _loadEarnings(null);
   }
 
-  Future<void> _loadEarnings(int? jobId) async {
-    final db = LocalDb.isar;
-    final earnings = jobId != null
-        ? await db.earnings.filter().jobIdEqualTo(jobId).findAll()
-        : await db.earnings.where().findAll();
+  // ───────────────── AMOUNT CALCULATION ─────────────────
 
-    setState(() {
-      earningsList = earnings;
-    });
+  int _toMinutes(String time) {
+    final p = time.split(":");
+    return int.parse(p[0]) * 60 + int.parse(p[1]);
   }
+
+  double _shiftAmount(Shift s, List<Job> jobsList) {
+    final job = jobsList.firstWhere((j) => j.id == s.jobId);
+    final start = _toMinutes(s.startTime);
+    final end = _toMinutes(s.endTime);
+    return ((end - start) / 60) * job.payRate;
+  }
+
+  // ───────────────── PENDING POPUP (MODERN UI, OLD LOGIC) ─────────────────
+
+  Future<void> _openPendingPopup() async {
+    Set<Shift> selected = {};
+    double total = 0;
+    final controller = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            void recalc() {
+              total = selected.fold(
+                0,
+                (sum, s) => sum + _shiftAmount(s, jobs),
+              );
+              controller.text = total.toStringAsFixed(2);
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 12,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Pending Shifts",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 220,
+                    child: ListView(
+                      children: pendingShifts.map((s) {
+                        final job = jobs.firstWhere((j) => j.id == s.jobId);
+                        return CheckboxListTile(
+                          value: selected.contains(s),
+                          onChanged: (v) {
+                            setModal(() {
+                              v! ? selected.add(s) : selected.remove(s);
+                              recalc();
+                            });
+                          },
+                          title: Text(job.title),
+                          subtitle: Text(
+                            "${DateFormat('MMM dd').format(s.date)} • "
+                            "${s.startTime} - ${s.endTime}",
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: controller,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: "Amount (£)",
+                      prefixIcon: const Icon(Icons.attach_money_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selected.isEmpty
+                          ? null
+                          : () async {
+                              final amount =
+                                  double.tryParse(controller.text) ?? total;
+
+                              final db = LocalDb.isar;
+
+                              await db.writeTxn(() async {
+                                final earning = Earning()
+                                  ..amount = amount
+                                  ..jobId = selectedJobId ?? 0
+                                  ..category = "Shift Payment"
+                                  ..dateEarned = DateTime.now()
+                                  ..status = "paid";
+
+                                await db.earnings.put(earning);
+
+                                for (final s in selected) {
+                                  s.status = "paid";
+                                  await db.shifts.put(s);
+                                }
+                              });
+
+                              Navigator.pop(context);
+                              _loadData();
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        "ADD EARNING",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ───────────────── UI ─────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -63,218 +243,135 @@ class _EarningScreenState extends State<EarningScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header & Job Filter
-            Padding(
-              padding: const EdgeInsets.fromLTRB(25, 20, 25, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Earnings",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue.withOpacity(0.9),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildJobDropdown(),
-                ],
-              ),
-            ),
-
-            // Expandable Calendar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: primaryBlue.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: _buildCalendar(),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Income History",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Icon(Icons.trending_up_rounded,
-                      color: Colors.green.withOpacity(0.7)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Scrollable List
-            Expanded(child: _buildEarningsSection()),
+            _header(),
+            _jobDropdown(),
+            _summaryRow(),
+            Expanded(child: _earningList()),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildJobDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: primaryBlue.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(15),
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Text(
+        "Earnings",
+        style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: primaryBlue,
+        ),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedJob,
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down_rounded, color: primaryBlue),
-          items: [
-            const DropdownMenuItem(
-                value: "all", child: Text("All Revenue Sources")),
-            ...jobList.map((job) => DropdownMenuItem(
-                  value: job.title,
-                  child: Text(job.title),
-                )),
-            const DropdownMenuItem(
-              value: "Add New Job",
-              child: Text("➕ Add New Job",
+    );
+  }
+
+  Widget _jobDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: primaryBlue.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int?>(
+            value: selectedJobId,
+            hint: const Text("All Jobs"),
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(value: null, child: Text("All Jobs")),
+              ...jobs.map(
+                (j) => DropdownMenuItem(value: j.id, child: Text(j.title)),
+              ),
+            ],
+            onChanged: (v) {
+              selectedJobId = v;
+              _loadData();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          _summaryBox(
+            "Pending",
+            pendingTotal,
+            Colors.orange,
+            onTap: pendingShifts.isEmpty ? null : _openPendingPopup,
+          ),
+          const SizedBox(width: 8),
+          _summaryBox("Month", monthTotal, Colors.green),
+          const SizedBox(width: 8),
+          _summaryBox("Year", yearTotal, Colors.blue),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryBox(String label, double value, Color color,
+      {VoidCallback? onTap}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Text(label,
                   style: TextStyle(
-                      color: Colors.blue, fontWeight: FontWeight.bold)),
-            ),
-          ],
-          onChanged: (String? newValue) {
-            if (newValue == "Add New Job") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const NewJobScreen()),
-              ).then((_) => _loadJobs());
-            } else {
-              setState(() => _selectedJob = newValue);
-              if (newValue == "all") {
-                _loadEarnings(null);
-              } else {
-                final job = jobList.firstWhere((j) => j.title == newValue);
-                _loadEarnings(job.id);
-              }
-            }
-          },
+                      fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+              const SizedBox(height: 6),
+              Text("£${value.toStringAsFixed(2)}",
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCalendar() {
-    return TableCalendar(
-      firstDay: DateTime.utc(2010, 10, 16),
-      lastDay: DateTime.utc(2030, 3, 14),
-      focusedDay: _selectedDay,
-
-      // LOGIC: These lines handle the expansion/contraction
-      calendarFormat: _calendarFormat,
-      onFormatChanged: (format) => setState(() => _calendarFormat = format),
-      availableCalendarFormats: const {
-        CalendarFormat.month: 'Month',
-        CalendarFormat.twoWeeks: 'Compact',
-      },
-
-      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-      onDaySelected: (selectedDay, focusedDay) {
-        setState(() => _selectedDay = selectedDay);
-      },
-
-      // Theming
-      calendarStyle: CalendarStyle(
-        selectedDecoration:
-            BoxDecoration(color: primaryBlue, shape: BoxShape.circle),
-        todayDecoration: BoxDecoration(
-            color: primaryBlue.withOpacity(0.3), shape: BoxShape.circle),
-        markerDecoration:
-            BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-      ),
-      headerStyle: HeaderStyle(
-        formatButtonVisible: true,
-        titleCentered: true,
-        formatButtonDecoration: BoxDecoration(
-          color: primaryBlue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        formatButtonTextStyle:
-            TextStyle(color: primaryBlue, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _buildEarningsSection() {
-    if (earningsList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.account_balance_wallet_outlined,
-                size: 60, color: Colors.grey[200]),
-            const SizedBox(height: 10),
-            const Text("No earnings found for this filter",
-                style: TextStyle(color: Colors.grey)),
-          ],
-        ),
-      );
+  Widget _earningList() {
+    if (earnings.isEmpty) {
+      return const Center(child: Text("No earnings yet"));
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: earningsList.length,
-      itemBuilder: (context, index) {
-        final earning = earningsList[index];
-        return _buildEarningCard(earning);
-      },
-    );
-  }
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: earnings.length,
+      itemBuilder: (_, i) {
+        final e = earnings[i];
+        if (selectedJobId != null && e.jobId != selectedJobId) {
+          return const SizedBox.shrink();
+        }
 
-  Widget _buildEarningCard(Earning earning) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+        final jobName = e.jobId == 0
+            ? "Other Income"
+            : jobs.firstWhere((j) => j.id == e.jobId).title;
+
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.check_circle, color: Colors.green),
+            title: Text("£${e.amount.toStringAsFixed(2)}"),
+            subtitle: Text(
+              "$jobName • ${DateFormat('MMM dd, yyyy').format(e.dateEarned)}",
+            ),
           ),
-          child: const Icon(Icons.add_chart_rounded, color: Colors.green),
-        ),
-        title: Text(
-          earning.category,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Text(DateFormat('MMM dd, yyyy').format(earning.dateEarned)),
-        trailing: Text(
-          "+ £${earning.amount.toStringAsFixed(2)}",
-          style: const TextStyle(
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        onTap: () {
-          // Handle tap logic
-        },
-      ),
+        );
+      },
     );
   }
 }

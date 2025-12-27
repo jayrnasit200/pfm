@@ -1,40 +1,39 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
-const String baseurl = "http://127.0.0.1:8000";
+import 'package:pfm/data/local/local_db.dart';
+import 'package:pfm/data/models/goal.dart';
 
 class SetGoals extends StatefulWidget {
   const SetGoals({super.key});
 
   @override
-  _SetGoalsState createState() => _SetGoalsState();
+  State<SetGoals> createState() => _SetGoalsState();
 }
 
 class _SetGoalsState extends State<SetGoals> {
   final TextEditingController goalNameController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
+
   DateTime? selectedDate;
+  bool isSaving = false;
 
   final Color primaryBlue = Colors.blue;
 
+  @override
+  void dispose() {
+    goalNameController.dispose();
+    amountController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: primaryBlue),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (pickedDate != null) {
@@ -42,6 +41,7 @@ class _SetGoalsState extends State<SetGoals> {
     }
   }
 
+  /// ✅ SAVE GOAL LOCALLY (ISAR)
   Future<void> _saveGoal() async {
     if (goalNameController.text.isEmpty ||
         amountController.text.isEmpty ||
@@ -50,37 +50,29 @@ class _SetGoalsState extends State<SetGoals> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt("id");
-
-    if (userId == null) {
-      _showSnackBar("User ID not found", Colors.redAccent);
-      return;
-    }
-
-    final url = Uri.parse("$baseurl/api/creategoals");
-    final Map<String, dynamic> goalData = {
-      "user_id": userId,
-      "name": goalNameController.text,
-      "target_amount": amountController.text,
-      "deadline": selectedDate!.toIso8601String(),
-    };
+    setState(() => isSaving = true);
 
     try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(goalData),
-      );
+      final isar = LocalDb.isar;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        _showSnackBar("Goal saved successfully! 🎯", Colors.green);
-        Navigator.pop(context);
-      } else {
-        _showSnackBar("Failed to save goal", Colors.redAccent);
-      }
+      final goal = Goal(
+        name: goalNameController.text.trim(),
+        targetAmount: double.tryParse(amountController.text.trim()) ?? 0.0,
+        deadline: selectedDate!,
+      )..savedAmount = 0.0;
+
+      await isar.writeTxn(() async {
+        await isar.goals.put(goal);
+      });
+
+      if (!mounted) return;
+
+      _showSnackBar("Goal saved locally 🎯", Colors.green);
+      Navigator.pop(context);
     } catch (e) {
-      _showSnackBar("Error: $e", Colors.redAccent);
+      _showSnackBar("Error saving goal: $e", Colors.redAccent);
+    } finally {
+      if (mounted) setState(() => isSaving = false);
     }
   }
 
@@ -103,12 +95,14 @@ class _SetGoalsState extends State<SetGoals> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black87,
-        title: const Text("New Savings Goal",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "New Savings Goal",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -117,7 +111,7 @@ class _SetGoalsState extends State<SetGoals> {
             _buildLabel("What are you saving for?"),
             _buildInputField(
               controller: goalNameController,
-              hint: "e.g. New Laptop, Vacation, Car",
+              hint: "e.g. New Laptop, Vacation",
               icon: Icons.flag_rounded,
             ),
             const SizedBox(height: 20),
@@ -168,9 +162,10 @@ class _SetGoalsState extends State<SetGoals> {
       child: Text(
         text,
         style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: primaryBlue.withOpacity(0.8)),
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: primaryBlue.withOpacity(0.8),
+        ),
       ),
     );
   }
@@ -240,21 +235,24 @@ class _SetGoalsState extends State<SetGoals> {
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: _saveGoal,
+        onPressed: isSaving ? null : _saveGoal,
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryBlue,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 0,
         ),
-        child: const Text(
-          "SET GOAL",
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1),
-        ),
+        child: isSaving
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                "SET GOAL",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
       ),
     );
   }

@@ -2,13 +2,28 @@ import 'package:isar/isar.dart';
 
 part 'job.g.dart';
 
-@Collection()
-class job {
+@collection
+class Job {
   Id id = Isar.autoIncrement;
+
   late String title;
   late double payRate;
-  late String description;
-  late String? startTime;
-  late String? endTime;
-  late DateTime? date;
+  String? description;
+
+  String? startTime;
+  String? endTime;
+  DateTime? date;
+
+  DateTime createdAt = DateTime.now();
+  DateTime updatedAt = DateTime.now();
+
+  /// ✅ THIS CONSTRUCTOR IS THE FIX
+  Job({
+    required this.title,
+    required this.payRate,
+    this.description,
+    this.startTime,
+    this.endTime,
+    this.date,
+  });
 }

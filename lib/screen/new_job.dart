@@ -1,13 +1,12 @@
-// lib/screen/new_job_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:isar/isar.dart';
+
 import 'package:pfm/data/local/local_db.dart';
 import 'package:pfm/data/models/job.dart';
 import 'package:pfm/screen/joblist.dart';
 
 class NewJobScreen extends StatefulWidget {
-  final job? jobData; // Note: Ensure your model class is 'job' or 'Job'
+  final Job? jobData;
 
   const NewJobScreen({super.key, this.jobData});
 
@@ -17,73 +16,87 @@ class NewJobScreen extends StatefulWidget {
 
 class _NewJobScreenState extends State<NewJobScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController jobTitleController = TextEditingController();
   final TextEditingController payRateController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+
   bool isLoading = false;
-  job? _jobDetails;
+  Job? _jobDetails;
 
   final Color primaryBlue = Colors.blue;
 
   @override
   void initState() {
     super.initState();
-    if (widget.jobData != null) {
-      _jobDetails = widget.jobData;
+    _jobDetails = widget.jobData;
+    if (_jobDetails != null) {
       _populateFields();
     }
   }
 
-  void _populateFields() {
-    jobTitleController.text = _jobDetails?.title ?? "";
-    payRateController.text = _jobDetails?.payRate.toString() ?? "";
-    descriptionController.text = _jobDetails?.description ?? "";
+  @override
+  void dispose() {
+    jobTitleController.dispose();
+    payRateController.dispose();
+    descriptionController.dispose();
+    super.dispose();
   }
 
+  void _populateFields() {
+    jobTitleController.text = _jobDetails!.title;
+    payRateController.text = _jobDetails!.payRate.toString();
+    descriptionController.text = _jobDetails!.description ?? '';
+  }
+
+  /// ✅ SAVES DATA LOCALLY ON PHONE (ISAR)
   Future<void> _saveJob() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => isLoading = true);
 
     try {
-      final db = LocalDb.isar;
+      final isar = LocalDb.isar;
 
-      if (_jobDetails != null) {
-        final updatedJob = _jobDetails!
-          ..title = jobTitleController.text
-          ..payRate = double.tryParse(payRateController.text) ?? 0.0
-          ..description = descriptionController.text;
+      await isar.writeTxn(() async {
+        if (_jobDetails != null) {
+          // UPDATE
+          _jobDetails!
+            ..title = jobTitleController.text.trim()
+            ..payRate = double.tryParse(payRateController.text) ?? 0.0
+            ..description = descriptionController.text.trim();
 
-        await db.writeTxn(() async {
-          await db.jobs.put(updatedJob);
-        });
-      } else {
-        final newJob = job()
-          ..title = jobTitleController.text
-          ..payRate = double.tryParse(payRateController.text) ?? 0.0
-          ..description = descriptionController.text;
+          await isar.jobs.put(_jobDetails!);
+        } else {
+          // CREATE
+          final job = Job(
+            title: jobTitleController.text.trim(),
+            payRate: double.tryParse(payRateController.text) ?? 0.0,
+            description: descriptionController.text.trim(),
+          );
 
-        await db.writeTxn(() async {
-          await db.jobs.put(newJob);
-        });
-      }
+          await isar.jobs.put(job);
+        }
+      });
 
-      _showFeedback("Job saved successfully", Colors.green);
+      if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const JobListScreen()),
-      );
+      _showFeedback('Job saved locally on device', Colors.green);
+
+      // ✅ Go back — JobList listens to Isar changes
+      Navigator.pop(context);
     } catch (e) {
-      _showFeedback("Error saving job: $e", Colors.red);
+      _showFeedback('Error saving job: $e', Colors.red);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-    setState(() => isLoading = false);
   }
 
   void _showFeedback(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: color.withOpacity(0.8),
+        backgroundColor: color.withOpacity(0.9),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -91,7 +104,7 @@ class _NewJobScreenState extends State<NewJobScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool isEditing = _jobDetails != null;
+    final bool isEditing = _jobDetails != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -99,43 +112,47 @@ class _NewJobScreenState extends State<NewJobScreen> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black87,
-        title: Text(isEditing ? "Edit Job" : "New Occupation",
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          isEditing ? 'Edit Job' : 'New Occupation',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionHeader("Basic Details"),
+              _buildSectionHeader('Basic Details'),
               _buildModernTextField(
                 controller: jobTitleController,
-                label: "Job Title",
+                label: 'Job Title',
                 icon: Icons.work_outline_rounded,
-                hint: "e.g. Software Engineer",
+                hint: 'e.g. Software Engineer',
               ),
               const SizedBox(height: 20),
               _buildModernTextField(
                 controller: payRateController,
-                label: "Hourly Pay (£)",
+                label: 'Hourly Pay (£)',
                 icon: Icons.payments_outlined,
-                hint: "0.00",
+                hint: '0.00',
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 formatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$'))
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d*\.?\d*$'),
+                  )
                 ],
               ),
               const SizedBox(height: 25),
-              _buildSectionHeader("Information"),
+              _buildSectionHeader('Information'),
               _buildModernTextField(
                 controller: descriptionController,
-                label: "Description",
+                label: 'Description',
                 icon: Icons.notes_rounded,
-                hint: "What do you do at this job?",
+                hint: 'What do you do at this job?',
                 maxLines: 4,
               ),
               const SizedBox(height: 40),
@@ -181,17 +198,16 @@ class _NewJobScreenState extends State<NewJobScreen> {
         maxLines: maxLines,
         keyboardType: keyboardType,
         inputFormatters: formatters,
-        style: const TextStyle(fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          prefixIcon: Icon(icon, color: primaryBlue.withOpacity(0.5)),
+          prefixIcon: Icon(icon, color: primaryBlue.withOpacity(0.6)),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          labelStyle: TextStyle(color: primaryBlue.withOpacity(0.7)),
         ),
-        validator: (value) => value!.isEmpty ? "$label is required" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? '$label is required' : null,
       ),
     );
   }
@@ -203,7 +219,6 @@ class _NewJobScreenState extends State<NewJobScreen> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryBlue,
-          elevation: 0,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
@@ -211,12 +226,13 @@ class _NewJobScreenState extends State<NewJobScreen> {
         child: isLoading
             ? const CircularProgressIndicator(color: Colors.white)
             : const Text(
-                "CONFIRM & SAVE",
+                'CONFIRM & SAVE',
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1),
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
       ),
     );
