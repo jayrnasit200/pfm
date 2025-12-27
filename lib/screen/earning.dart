@@ -93,7 +93,7 @@ class _EarningScreenState extends State<EarningScreen> {
     return ((end - start) / 60) * job.payRate;
   }
 
-  // ───────────────── PENDING POPUP (MODERN UI, OLD LOGIC) ─────────────────
+  // ───────────────── PENDING SHIFTS POPUP ─────────────────
 
   Future<void> _openPendingPopup() async {
     Set<Shift> selected = {};
@@ -107,128 +107,237 @@ class _EarningScreenState extends State<EarningScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) {
-        return StatefulBuilder(
-          builder: (context, setModal) {
-            void recalc() {
-              total = selected.fold(
-                0,
-                (sum, s) => sum + _shiftAmount(s, jobs),
-              );
-              controller.text = total.toStringAsFixed(2);
-            }
+      builder: (_) => StatefulBuilder(
+        builder: (context, setModal) {
+          void recalc() {
+            total = selected.fold(
+              0,
+              (sum, s) => sum + _shiftAmount(s, jobs),
+            );
+            controller.text = total.toStringAsFixed(2);
+          }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 12,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Pending Shifts",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 220,
+                  child: ListView(
+                    children: pendingShifts.map((s) {
+                      final job = jobs.firstWhere((j) => j.id == s.jobId);
+                      return CheckboxListTile(
+                        value: selected.contains(s),
+                        onChanged: (v) {
+                          setModal(() {
+                            v! ? selected.add(s) : selected.remove(s);
+                            recalc();
+                          });
+                        },
+                        title: Text(job.title),
+                        subtitle: Text(
+                          "${DateFormat('MMM dd').format(s.date)} • "
+                          "${s.startTime} - ${s.endTime}",
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: controller,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: "Amount (£)",
+                    prefixIcon: const Icon(Icons.attach_money_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Pending Shifts",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 220,
-                    child: ListView(
-                      children: pendingShifts.map((s) {
-                        final job = jobs.firstWhere((j) => j.id == s.jobId);
-                        return CheckboxListTile(
-                          value: selected.contains(s),
-                          onChanged: (v) {
-                            setModal(() {
-                              v! ? selected.add(s) : selected.remove(s);
-                              recalc();
-                            });
-                          },
-                          title: Text(job.title),
-                          subtitle: Text(
-                            "${DateFormat('MMM dd').format(s.date)} • "
-                            "${s.startTime} - ${s.endTime}",
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: controller,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: "Amount (£)",
-                      prefixIcon: const Icon(Icons.attach_money_rounded),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: selected.isEmpty
-                          ? null
-                          : () async {
-                              final amount =
-                                  double.tryParse(controller.text) ?? total;
+                ),
+                const SizedBox(height: 25),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: selected.isEmpty
+                        ? null
+                        : () async {
+                            final amount =
+                                double.tryParse(controller.text) ?? total;
 
-                              final db = LocalDb.isar;
+                            final db = LocalDb.isar;
 
-                              await db.writeTxn(() async {
-                                final earning = Earning()
+                            await db.writeTxn(() async {
+                              await db.earnings.put(
+                                Earning()
                                   ..amount = amount
                                   ..jobId = selectedJobId ?? 0
                                   ..category = "Shift Payment"
                                   ..dateEarned = DateTime.now()
-                                  ..status = "paid";
+                                  ..status = "paid",
+                              );
 
-                                await db.earnings.put(earning);
+                              for (final s in selected) {
+                                s.status = "paid";
+                                await db.shifts.put(s);
+                              }
+                            });
 
-                                for (final s in selected) {
-                                  s.status = "paid";
-                                  await db.shifts.put(s);
-                                }
-                              });
-
-                              Navigator.pop(context);
-                              _loadData();
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryBlue,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        "ADD EARNING",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.white),
+                            Navigator.pop(context);
+                            _loadData();
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
                       ),
                     ),
+                    child: const Text(
+                      "ADD EARNING",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ───────────────── MANUAL ADD EARNING ─────────────────
+
+  Future<void> _openManualEarningPopup() async {
+    final amountCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    int? jobId = selectedJobId;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
               ),
-            );
-          },
-        );
-      },
+            ),
+            const SizedBox(height: 20),
+            const Text("Add Earning",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<int?>(
+              value: jobId,
+              hint: const Text("Select Job (optional)"),
+              items: [
+                const DropdownMenuItem(
+                    value: null, child: Text("Other Income")),
+                ...jobs.map(
+                  (j) => DropdownMenuItem(value: j.id, child: Text(j.title)),
+                ),
+              ],
+              onChanged: (v) => jobId = v,
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: amountCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: "Amount (£)",
+                prefixIcon: Icon(Icons.attach_money_rounded),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: noteCtrl,
+              decoration: const InputDecoration(
+                labelText: "Note",
+                prefixIcon: Icon(Icons.notes_rounded),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 25),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final amount = double.tryParse(amountCtrl.text);
+                  if (amount == null) return;
+
+                  final db = LocalDb.isar;
+                  await db.writeTxn(() async {
+                    await db.earnings.put(
+                      Earning()
+                        ..amount = amount
+                        ..jobId = jobId ?? 0
+                        ..category =
+                            noteCtrl.text.isEmpty ? "Manual" : noteCtrl.text
+                        ..dateEarned = DateTime.now()
+                        ..status = "paid",
+                    );
+                  });
+
+                  Navigator.pop(context);
+                  _loadData();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryBlue,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                child: const Text(
+                  "SAVE EARNING",
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -256,13 +365,20 @@ class _EarningScreenState extends State<EarningScreen> {
   Widget _header() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Text(
-        "Earnings",
-        style: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: primaryBlue,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("Earnings",
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: primaryBlue)),
+          IconButton(
+            icon: const Icon(Icons.add_circle_rounded, size: 30),
+            color: primaryBlue,
+            onPressed: _openManualEarningPopup,
+          ),
+        ],
       ),
     );
   }
@@ -302,12 +418,8 @@ class _EarningScreenState extends State<EarningScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          _summaryBox(
-            "Pending",
-            pendingTotal,
-            Colors.orange,
-            onTap: pendingShifts.isEmpty ? null : _openPendingPopup,
-          ),
+          _summaryBox("Pending", pendingTotal, Colors.orange,
+              onTap: pendingShifts.isEmpty ? null : _openPendingPopup),
           const SizedBox(width: 8),
           _summaryBox("Month", monthTotal, Colors.green),
           const SizedBox(width: 8),

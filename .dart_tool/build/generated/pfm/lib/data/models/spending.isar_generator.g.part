@@ -18,10 +18,10 @@ const SpendingSchema = CollectionSchema(
       name: r'amount',
       type: IsarType.double,
     ),
-    r'categoryId': PropertySchema(
+    r'category': PropertySchema(
       id: 1,
-      name: r'categoryId',
-      type: IsarType.long,
+      name: r'category',
+      type: IsarType.string,
     ),
     r'date': PropertySchema(
       id: 2,
@@ -54,6 +54,7 @@ int _spendingEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.category.length * 3;
   bytesCount += 3 + object.description.length * 3;
   return bytesCount;
 }
@@ -65,7 +66,7 @@ void _spendingSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDouble(offsets[0], object.amount);
-  writer.writeLong(offsets[1], object.categoryId);
+  writer.writeString(offsets[1], object.category);
   writer.writeDateTime(offsets[2], object.date);
   writer.writeString(offsets[3], object.description);
 }
@@ -78,7 +79,7 @@ Spending _spendingDeserialize(
 ) {
   final object = Spending();
   object.amount = reader.readDouble(offsets[0]);
-  object.categoryId = reader.readLong(offsets[1]);
+  object.category = reader.readString(offsets[1]);
   object.date = reader.readDateTime(offsets[2]);
   object.description = reader.readString(offsets[3]);
   object.id = id;
@@ -95,7 +96,7 @@ P _spendingDeserializeProp<P>(
     case 0:
       return (reader.readDouble(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readDateTime(offset)) as P;
     case 3:
@@ -256,55 +257,132 @@ extension SpendingQueryFilter
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryIdEqualTo(
-      int value) {
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'categoryId',
+        property: r'category',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryIdGreaterThan(
-    int value, {
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryGreaterThan(
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'categoryId',
+        property: r'category',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryIdLessThan(
-    int value, {
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryLessThan(
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'categoryId',
+        property: r'category',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryIdBetween(
-    int lower,
-    int upper, {
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryBetween(
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'categoryId',
+        property: r'category',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'category',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Spending, Spending, QAfterFilterCondition> categoryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'category',
+        value: '',
       ));
     });
   }
@@ -566,15 +644,15 @@ extension SpendingQuerySortBy on QueryBuilder<Spending, Spending, QSortBy> {
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterSortBy> sortByCategoryId() {
+  QueryBuilder<Spending, Spending, QAfterSortBy> sortByCategory() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'categoryId', Sort.asc);
+      return query.addSortBy(r'category', Sort.asc);
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterSortBy> sortByCategoryIdDesc() {
+  QueryBuilder<Spending, Spending, QAfterSortBy> sortByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'categoryId', Sort.desc);
+      return query.addSortBy(r'category', Sort.desc);
     });
   }
 
@@ -617,15 +695,15 @@ extension SpendingQuerySortThenBy
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterSortBy> thenByCategoryId() {
+  QueryBuilder<Spending, Spending, QAfterSortBy> thenByCategory() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'categoryId', Sort.asc);
+      return query.addSortBy(r'category', Sort.asc);
     });
   }
 
-  QueryBuilder<Spending, Spending, QAfterSortBy> thenByCategoryIdDesc() {
+  QueryBuilder<Spending, Spending, QAfterSortBy> thenByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'categoryId', Sort.desc);
+      return query.addSortBy(r'category', Sort.desc);
     });
   }
 
@@ -674,9 +752,10 @@ extension SpendingQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Spending, Spending, QDistinct> distinctByCategoryId() {
+  QueryBuilder<Spending, Spending, QDistinct> distinctByCategory(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'categoryId');
+      return query.addDistinctBy(r'category', caseSensitive: caseSensitive);
     });
   }
 
@@ -708,9 +787,9 @@ extension SpendingQueryProperty
     });
   }
 
-  QueryBuilder<Spending, int, QQueryOperations> categoryIdProperty() {
+  QueryBuilder<Spending, String, QQueryOperations> categoryProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'categoryId');
+      return query.addPropertyName(r'category');
     });
   }
 

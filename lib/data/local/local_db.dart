@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pfm/data/models/spending.dart';
 
 import '../models/expense.dart';
 import '../models/category.dart';
@@ -11,13 +10,12 @@ import '../models/job.dart';
 import '../models/goal.dart';
 import '../models/earning.dart';
 import '../models/user.dart';
-import '../models/shift.dart'; // ✅ ADD THIS
-import '../models/Spending.dart'; // ✅ ADD THIS
+import '../models/shift.dart';
+import '../models/spending.dart';
 
 class LocalDb {
   static Isar? _isar;
 
-  /// Safe access
   static Isar get isar {
     if (_isar == null) {
       throw Exception('Isar is not initialized. Call LocalDb.init() first.');
@@ -40,7 +38,7 @@ class LocalDb {
             GoalSchema,
             EarningSchema,
             ShiftSchema,
-            SpendingSchema, // ✅ REQUIRED
+            SpendingSchema,
           ],
           directory: '',
         );
@@ -55,7 +53,8 @@ class LocalDb {
             JobSchema,
             GoalSchema,
             EarningSchema,
-            ShiftSchema, // ✅ REQUIRED
+            ShiftSchema,
+            SpendingSchema,
           ],
           directory: dir.path,
         );

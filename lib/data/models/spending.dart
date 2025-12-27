@@ -8,6 +8,7 @@ class Spending {
 
   late double amount;
   late String description;
-  late int categoryId;
+  late String category;
+
   late DateTime date;
 }
