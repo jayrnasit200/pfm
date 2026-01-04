@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pfm/data/models/goal.dart';
-import 'package:pfm/data/local/local_db.dart';
+import 'package:FINEXA/data/models/goal.dart';
+import 'package:FINEXA/data/local/local_db.dart';
 
 class ViewGoal extends StatefulWidget {
   final Goal goal;

@@ -1,7 +1,7 @@
 // File: lib/screen/Spending.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:pfm/NavigationBar.dart';
+import 'package:FINEXA/NavigationBar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';

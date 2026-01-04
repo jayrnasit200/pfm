@@ -4,10 +4,10 @@ import 'package:isar/isar.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:pfm/data/local/local_db.dart';
-import 'package:pfm/data/models/goal.dart';
-import 'package:pfm/screen/SetGoals.dart';
-import 'package:pfm/screen/ViewGoal.dart';
+import 'package:FINEXA/data/local/local_db.dart';
+import 'package:FINEXA/data/models/goal.dart';
+import 'package:FINEXA/screen/SetGoals.dart';
+import 'package:FINEXA/screen/ViewGoal.dart';
 
 /// 🔹 CHANGE BASE URL HERE ONLY
 const String BASE_URL = 'http://127.0.0.1:8000/api';

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:pfm/NavigationBar.dart';
-import 'package:pfm/data/local/local_db.dart';
-import 'package:pfm/data/models/user.dart';
-import 'package:pfm/screen/Auth/Login.dart';
-import 'package:pfm/screen/GoalsList.dart';
-import 'package:pfm/screen/contactinfo.dart';
-import 'package:pfm/screen/joblist.dart';
+import 'package:FINEXA/NavigationBar.dart';
+import 'package:FINEXA/data/local/local_db.dart';
+import 'package:FINEXA/data/models/user.dart';
+import 'package:FINEXA/screen/Auth/Login.dart';
+import 'package:FINEXA/screen/GoalsList.dart';
+import 'package:FINEXA/screen/contactinfo.dart';
+import 'package:FINEXA/screen/joblist.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:pfm/data/models/job.dart';
-import 'package:pfm/screen/jobedit.dart';
-import 'package:pfm/screen/new_job.dart';
-import 'package:pfm/data/local/local_db.dart';
+import 'package:FINEXA/data/models/job.dart';
+import 'package:FINEXA/screen/jobedit.dart';
+import 'package:FINEXA/screen/new_job.dart';
+import 'package:FINEXA/data/local/local_db.dart';
 
 class JobListScreen extends StatefulWidget {
   const JobListScreen({super.key});

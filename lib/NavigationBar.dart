@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:pfm/screen/earning.dart';
-import 'package:pfm/screen/home.dart';
-import 'package:pfm/screen/profile.dart';
-import 'package:pfm/screen/spending.dart';
+import 'package:FINEXA/screen/earning.dart';
+import 'package:FINEXA/screen/home.dart';
+import 'package:FINEXA/screen/profile.dart';
+import 'package:FINEXA/screen/spending.dart';
 
 class NavigationBars extends StatefulWidget {
   final String activePage;

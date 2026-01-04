@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pfm/screen/Auth/Login.dart';
+import 'package:FINEXA/screen/Auth/Login.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});

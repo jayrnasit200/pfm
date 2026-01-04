@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
-import 'package:pfm/data/local/local_db.dart';
-import 'package:pfm/data/models/shift.dart';
+import 'package:FINEXA/data/local/local_db.dart';
+import 'package:FINEXA/data/models/shift.dart';
 
 class rotaScreen extends StatefulWidget {
   final int id; // jobId

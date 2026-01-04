@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pfm/screen/Auth/%20signup.dart';
-import 'package:pfm/screen/home.dart';
+import 'package:FINEXA/screen/Auth/%20signup.dart';
+import 'package:FINEXA/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {

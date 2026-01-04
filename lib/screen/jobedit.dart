@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pfm/data/local/local_db.dart';
-import 'package:pfm/data/models/job.dart';
-import 'package:pfm/screen/RotaViewPage.dart';
+import 'package:FINEXA/data/local/local_db.dart';
+import 'package:FINEXA/data/models/job.dart';
+import 'package:FINEXA/screen/RotaViewPage.dart';
 
 class JobEdit extends StatefulWidget {
   final Job? jobData;

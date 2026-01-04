@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:pfm/data/local/local_db.dart';
-import 'package:pfm/providers/expense_provider.dart';
-import 'package:pfm/screen/Auth/Login.dart';
-import 'package:pfm/screen/home.dart';
+import 'package:FINEXA/data/local/local_db.dart';
+import 'package:FINEXA/providers/expense_provider.dart';
+import 'package:FINEXA/screen/Auth/Login.dart';
+import 'package:FINEXA/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'PFM',
+        title: 'FINEXA',
         theme: ThemeData(
           // Updated to use Blue as the base seed
           colorScheme: ColorScheme.fromSeed(
@@ -152,7 +152,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 30),
             Text(
-              'PFM',
+              'FINEXA',
               style: TextStyle(
                 color: baseBlue.withOpacity(0.9),
                 fontSize: 36,

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:pfm/NavigationBar.dart';
-import 'package:pfm/screen/Auth/Login.dart';
-import 'package:pfm/data/local/local_db.dart';
-import 'package:pfm/data/models/goal.dart';
-import 'package:pfm/data/models/earning.dart';
+import 'package:FINEXA/NavigationBar.dart';
+import 'package:FINEXA/screen/Auth/Login.dart';
+import 'package:FINEXA/data/local/local_db.dart';
+import 'package:FINEXA/data/models/goal.dart';
+import 'package:FINEXA/data/models/earning.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:pfm/data/models/job.dart';
+import 'package:FINEXA/data/models/job.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

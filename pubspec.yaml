@@ -1,4 +1,4 @@
-name: pfm
+name: FINEXA
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -49,6 +49,8 @@ dependencies:
   isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.5
   provider: ^6.1.2
+  csv: ^6.0.0
+  
 
 
 dev_dependencies:
@@ -110,7 +112,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-flutter_icons:
+# flutter_icons:
+#   android: true
+#   ios: true
+#   image_path: "assets/logo.png"
+flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logo.png"
+  remove_alpha_ios: true
+
+  web: false
+  windows: false
+  macos: false
