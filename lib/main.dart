@@ -6,16 +6,17 @@ import 'package:FINEXA/providers/expense_provider.dart';
 import 'package:FINEXA/screen/Auth/Login.dart';
 import 'package:FINEXA/screen/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await MobileAds.instance.initialize();
   try {
     await LocalDb.init();
   } catch (e) {
     debugPrint('Local DB init failed: $e');
   }
-  await LocalDb.init();
+
   runApp(const MyApp());
 }
 
