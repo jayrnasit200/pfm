@@ -96,76 +96,177 @@ class _EarningScreenState extends State<EarningScreen> {
   // ───────────────── ADD MANUAL EARNING ─────────────────
 
   Future<void> _addManualEarning() async {
-    final amountCtrl = TextEditingController();
-    final categoryCtrl = TextEditingController();
+    String mode = "manual"; // manual | paid
     int? jobId;
+    Set<Shift> selectedShifts = {};
+    double total = 0;
+
+    final amountCtrl = TextEditingController();
+    final categoryCtrl = TextEditingController(text: "Other");
+
+    List<Shift> availableShifts = [];
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          top: 20,
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text("Add Earning",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 15),
-          TextField(
-            controller: amountCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: "Amount (£)"),
-          ),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<int?>(
-            hint: const Text("Select Job (optional)"),
-            items: [
-              const DropdownMenuItem(value: null, child: Text("Other Income")),
-              ...jobs.map(
-                (j) => DropdownMenuItem(value: j.id, child: Text(j.title)),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            void recalc() {
+              total = selectedShifts.fold(
+                0,
+                (s, sh) => s + _shiftAmount(sh, jobs),
+              );
+              amountCtrl.text = total.toStringAsFixed(2);
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
-            ],
-            onChanged: (v) => jobId = v,
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: categoryCtrl,
-            decoration: const InputDecoration(labelText: "Category"),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(amountCtrl.text);
-              if (amount == null) return;
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Add Earning",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
 
-              final db = LocalDb.isar;
-              await db.writeTxn(() async {
-                await db.earnings.put(
-                  Earning()
-                    ..amount = amount
-                    ..jobId = jobId ?? 0
-                    ..category =
-                        categoryCtrl.text.isEmpty ? "Other" : categoryCtrl.text
-                    ..dateEarned = DateTime.now()
-                    ..status = "paid",
-                );
-              });
+                  /// MODE SELECT
+                  DropdownButtonFormField<String>(
+                    value: mode,
+                    items: const [
+                      DropdownMenuItem(
+                          value: "manual", child: Text("Manual Income")),
+                      DropdownMenuItem(value: "paid", child: Text("Get Paid")),
+                    ],
+                    onChanged: (v) {
+                      setModal(() {
+                        mode = v!;
+                        selectedShifts.clear();
+                        jobId = null;
+                        amountCtrl.clear();
+                      });
+                    },
+                  ),
 
-              Navigator.pop(context);
-              _loadData();
-            },
-            child: const Text("SAVE"),
-          )
-        ]),
-      ),
+                  const SizedBox(height: 12),
+
+                  /// GET PAID MODE
+                  if (mode == "paid") ...[
+                    DropdownButtonFormField<int>(
+                      hint: const Text("Select Job"),
+                      items: jobs
+                          .map((j) => DropdownMenuItem(
+                                value: j.id,
+                                child: Text(j.title),
+                              ))
+                          .toList(),
+                      onChanged: (v) async {
+                        jobId = v;
+                        final db = LocalDb.isar;
+                        availableShifts = await db.shifts
+                            .filter()
+                            .jobIdEqualTo(v!)
+                            .statusEqualTo("completed")
+                            .findAll();
+
+                        setModal(() {});
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    if (jobId != null)
+                      SizedBox(
+                        height: 200,
+                        child: ListView(
+                          children: availableShifts.map((s) {
+                            return CheckboxListTile(
+                              value: selectedShifts.contains(s),
+                              title: Text(
+                                DateFormat('MMM dd').format(s.date),
+                              ),
+                              subtitle: Text("${s.startTime} - ${s.endTime}"),
+                              onChanged: (v) {
+                                setModal(() {
+                                  v!
+                                      ? selectedShifts.add(s)
+                                      : selectedShifts.remove(s);
+                                  recalc();
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                  ],
+
+                  /// MANUAL MODE
+                  if (mode == "manual") ...[
+                    TextField(
+                      controller: categoryCtrl,
+                      decoration: const InputDecoration(labelText: "Category"),
+                    ),
+                  ],
+
+                  const SizedBox(height: 10),
+
+                  /// AMOUNT (ALWAYS SHOWN)
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    autofocus: true,
+                    decoration: const InputDecoration(labelText: "Amount (£)"),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  ElevatedButton(
+                    onPressed: () async {
+                      final amount = double.tryParse(amountCtrl.text);
+                      if (amount == null) return;
+
+                      final db = LocalDb.isar;
+
+                      await db.writeTxn(() async {
+                        await db.earnings.put(
+                          Earning()
+                            ..amount = amount
+                            ..jobId = jobId ?? 0
+                            ..category = mode == "paid"
+                                ? "Shift Payment"
+                                : categoryCtrl.text
+                            ..dateEarned = DateTime.now()
+                            ..status = "paid",
+                        );
+
+                        if (mode == "paid") {
+                          for (final s in selectedShifts) {
+                            s.status = "paid";
+                            await db.shifts.put(s);
+                          }
+                        }
+                      });
+
+                      Navigator.pop(context);
+                      _loadData();
+                    },
+                    child: const Text("SAVE"),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   // ───────────────── MONTHLY BAR CHART (FIXED) ─────────────────
-
   void _openMonthlyChart() {
     final data = List.generate(12, (i) {
       return earnings
