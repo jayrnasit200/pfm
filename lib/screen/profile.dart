@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:FINEXA/NavigationBar.dart';
-import 'package:FINEXA/data/local/local_db.dart';
-import 'package:FINEXA/data/models/user.dart';
 import 'package:FINEXA/screen/Auth/Login.dart';
 import 'package:FINEXA/screen/GoalsList.dart';
 import 'package:FINEXA/screen/contactinfo.dart';
@@ -16,29 +15,37 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  User? _user;
+  String _name = 'Guest User';
+  String _email = 'Sign in to sync data';
+
   final Color primaryBlue = Colors.blueAccent;
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadUserFromPrefs();
   }
 
-  Future<void> _loadUser() async {
-    final db = LocalDb.isar;
-    final users = await db.users.where().findAll();
-    if (users.isNotEmpty && mounted) {
-      setState(() {
-        _user = users.first;
-      });
-    }
+  // ───────────────── LOAD USER (LIVE LOGIN DATA) ─────────────────
+
+  Future<void> _loadUserFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    if (!isLoggedIn) return;
+
+    setState(() {
+      _name = prefs.getString('name') ?? 'Guest User';
+      _email = prefs.getString('email') ?? '';
+    });
   }
+
+  // ───────────────── UI ─────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB), // Modern light grey background
+      backgroundColor: const Color(0xFFF8F9FB),
       bottomNavigationBar: const NavigationBars("Profile"),
       body: SingleChildScrollView(
         child: Column(
@@ -53,24 +60,28 @@ class _ProfileState extends State<Profile> {
                   _buildProfileOption(
                     "Savings & Goals",
                     Icons.track_changes_rounded,
-                    () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const GoalsList())),
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const GoalsList()),
+                    ),
                   ),
                   _buildProfileOption(
                     "Work & Employment",
                     Icons.work_history_rounded,
                     () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const JobListScreen())),
+                      context,
+                      MaterialPageRoute(builder: (_) => const JobListScreen()),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   _sectionLabel("Personal Details"),
                   _buildProfileOption(
                     "Contact Information",
                     Icons.alternate_email_rounded,
-                    () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const Contactinfo())),
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Contactinfo()),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   _sectionLabel("Account Safety"),
@@ -89,9 +100,12 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  // ───────────────── HEADER ─────────────────
+
   Widget _buildProfileHeader() {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.only(top: 80, bottom: 40),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -103,13 +117,11 @@ class _ProfileState extends State<Profile> {
             color: Colors.black.withOpacity(0.03),
             blurRadius: 20,
             offset: const Offset(0, 10),
-          )
+          ),
         ],
       ),
-      padding: const EdgeInsets.only(top: 80, bottom: 40),
       child: Column(
         children: [
-          // Styled Avatar
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -126,11 +138,12 @@ class _ProfileState extends State<Profile> {
           ),
           const SizedBox(height: 20),
           Text(
-            _user?.name ?? 'Guest User',
+            _name,
             style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Colors.black87),
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 6),
           Container(
@@ -140,7 +153,7 @@ class _ProfileState extends State<Profile> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              _user?.email ?? 'Sign in to sync data',
+              _email,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -152,6 +165,8 @@ class _ProfileState extends State<Profile> {
       ),
     );
   }
+
+  // ───────────────── SECTIONS ─────────────────
 
   Widget _sectionLabel(String text) {
     return Padding(
@@ -168,8 +183,12 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildProfileOption(String title, IconData icon, VoidCallback onTap,
-      {bool isDestructive = false}) {
+  Widget _buildProfileOption(
+    String title,
+    IconData icon,
+    VoidCallback onTap, {
+    bool isDestructive = false,
+  }) {
     final Color iconColor = isDestructive ? Colors.redAccent : primaryBlue;
 
     return Container(
@@ -181,7 +200,6 @@ class _ProfileState extends State<Profile> {
       ),
       child: ListTile(
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Container(
           padding: const EdgeInsets.all(10),
@@ -208,22 +226,25 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  // ───────────────── LOGOUT ─────────────────
+
   Future<void> _handleLogout() async {
-    // Confirmation Dialog before logging out
     bool confirm = await showDialog(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (_) => AlertDialog(
             title: const Text("Logout"),
             content: const Text(
                 "Are you sure you want to sign out? Your local data will be cleared."),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text("Cancel")),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
               TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text("Logout",
-                      style: TextStyle(color: Colors.red))),
+                onPressed: () => Navigator.pop(context, true),
+                child:
+                    const Text("Logout", style: TextStyle(color: Colors.red)),
+              ),
             ],
           ),
         ) ??
@@ -231,19 +252,15 @@ class _ProfileState extends State<Profile> {
 
     if (!confirm) return;
 
-    final db = LocalDb.isar;
-    await db.writeTxn(() async {
-      await db.users.clear();
-      // Optional: Clear other collections if logout means a total reset
-      // await db.goals.clear();
-    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
 
     if (!mounted) return;
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const Login()),
-      (route) => false,
+      MaterialPageRoute(builder: (_) => const Login()),
+      (_) => false,
     );
   }
 }

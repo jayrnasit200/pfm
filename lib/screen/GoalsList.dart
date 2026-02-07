@@ -10,7 +10,7 @@ import 'package:FINEXA/screen/SetGoals.dart';
 import 'package:FINEXA/screen/ViewGoal.dart';
 
 /// 🔹 CHANGE BASE URL HERE ONLY
-const String BASE_URL = 'http://127.0.0.1:8000/api';
+const String BASE_URL = 'https://finexa.shunyasolutions.com/api';
 
 class GoalsList extends StatefulWidget {
   const GoalsList({super.key});

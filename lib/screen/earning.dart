@@ -266,6 +266,151 @@ class _EarningScreenState extends State<EarningScreen> {
     );
   }
 
+  // ───────────────── popop fror shits ─────────────────
+  void _openPendingPopup() async {
+    if (pendingShifts.isEmpty) return;
+
+    Set<Shift> selected = {};
+    double total = 0;
+    bool isManualEdit = false;
+
+    final TextEditingController amountCtrl = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setModal) {
+            void recalc() {
+              if (isManualEdit) return; // ✅ STOP auto calc when user edits
+
+              total = selected.fold(
+                0,
+                (sum, s) => sum + _shiftAmount(s, jobs),
+              );
+
+              amountCtrl.text = total.toStringAsFixed(2);
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    "Pending Shifts",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  /// SHIFT LIST
+                  SizedBox(
+                    height: 220,
+                    child: ListView(
+                      children: pendingShifts.map((s) {
+                        final job = jobs.firstWhere((j) => j.id == s.jobId);
+                        return CheckboxListTile(
+                          value: selected.contains(s),
+                          title: Text(job.title),
+                          subtitle: Text(
+                            "${DateFormat('MMM dd').format(s.date)} • "
+                            "${s.startTime} - ${s.endTime}",
+                          ),
+                          onChanged: (v) {
+                            setModal(() {
+                              v! ? selected.add(s) : selected.remove(s);
+                              recalc();
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  /// TOTAL AMOUNT (EDITABLE)
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: "Amount (£)"),
+                    onTap: () {
+                      isManualEdit = true; // ✅ USER TAKES CONTROL
+                    },
+                    onChanged: (_) {
+                      isManualEdit = true;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  /// ADD BUTTON
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selected.isEmpty
+                          ? null
+                          : () async {
+                              final double? finalAmount =
+                                  double.tryParse(amountCtrl.text);
+
+                              if (finalAmount == null || finalAmount <= 0)
+                                return;
+
+                              final db = LocalDb.isar;
+
+                              await db.writeTxn(() async {
+                                await db.earnings.put(
+                                  Earning()
+                                    ..amount = finalAmount
+                                    ..jobId = selected.first.jobId
+                                    ..category = "Shift Payment"
+                                    ..dateEarned = DateTime.now()
+                                    ..status = "paid",
+                                );
+
+                                for (final s in selected) {
+                                  s.status = "paid";
+                                  await db.shifts.put(s);
+                                }
+                              });
+
+                              Navigator.pop(context);
+                              _loadData();
+                            },
+                      child: const Text("ADD AS EARNING"),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // ───────────────── MONTHLY BAR CHART (FIXED) ─────────────────
   void _openMonthlyChart() {
     final data = List.generate(12, (i) {
@@ -434,28 +579,56 @@ class _EarningScreenState extends State<EarningScreen> {
   Widget _summaryRow() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(children: [
-        _box("Pending", pendingTotal, Colors.orange),
-        _box("Month", monthTotal, Colors.green),
-        _box("Year", yearTotal, Colors.blue),
-      ]),
+      child: Row(
+        children: [
+          Expanded(
+            child: _box(
+              "Pending",
+              pendingTotal,
+              Colors.orange,
+              onTap: _openPendingPopup,
+            ),
+          ),
+          Expanded(
+            child: _box("Month", monthTotal, Colors.green),
+          ),
+          Expanded(
+            child: _box("Year", yearTotal, Colors.blue),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _box(String label, double val, Color c) {
-    return Expanded(
+  Widget _box(
+    String label,
+    double val,
+    Color c, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-            color: c.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(14)),
-        child: Column(children: [
-          Text(label, style: TextStyle(color: c, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Text("£${val.toStringAsFixed(2)}",
-              style: TextStyle(color: c, fontSize: 16)),
-        ]),
+          color: c.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: c, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "£${val.toStringAsFixed(2)}",
+              style: TextStyle(color: c, fontSize: 16),
+            ),
+          ],
+        ),
       ),
     );
   }

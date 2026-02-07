@@ -44,7 +44,7 @@ class _SignupState extends State<Signup> {
     try {
       // Using 10.0.2.2 for Android Emulator compatibility
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/register'),
+        Uri.parse('https://finexa.shunyasolutions.com/api/register'),
         body: {
           'name': name,
           'email': email,

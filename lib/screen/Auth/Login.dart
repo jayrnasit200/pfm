@@ -30,7 +30,7 @@ class _LoginState extends State<Login> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/login'),
+        Uri.parse('https://finexa.shunyasolutions.com/api/login'),
         body: {'email': email, 'password': password},
       ).timeout(const Duration(seconds: 10));
 
