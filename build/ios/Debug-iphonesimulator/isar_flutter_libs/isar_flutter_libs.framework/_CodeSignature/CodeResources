@@ -14,7 +14,7 @@
 		</data>
 		<key>Headers/isar_flutter_libs-Swift.h</key>
 		<data>
-		2xV/7eUBZenIaysBUJcdbIijjCk=
+		2FvTn3tL8RGlMtpSrEopT1FYUqs=
 		</data>
 		<key>Headers/isar_flutter_libs-umbrella.h</key>
 		<data>
@@ -22,15 +22,15 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		ru7ki+MgAqYg3Msbzudu/Y/8rSI=
+		UiG9nLz7weLvmUmlbxmYZmORsmE=
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		KniVfIwNYW6APW743TWk6zCt7Yw=
+		FTADs974wM+C/hEzn74R6LCiVn8=
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		HsCRv6lxihc6orfemUdRcijMD0s=
+		Ij6suZB8WQI17kF88XJ+vG+L5gM=
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -38,11 +38,11 @@
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		M4EeAslI6dJQ0tfXjXjtFteRCLQ=
+		Wt2PzFjGJwYPf/zPFcNTvDkMPMg=
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		4Cw2fMnSRhtEsj2Vb2yZ+4EEBw4=
+		TDJICBTNLsBwGiNBUcjAq+fhpqU=
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -50,15 +50,15 @@
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		0sCDfwP/IYTPaUPI/4DNiT0hbAU=
+		r18aDkwgdJJuOQLUH0mywM7+pa8=
 		</data>
 		<key>Modules/isar_flutter_libs.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		8jMiZWn6tHD4m43tEa19nrVbMng=
+		HpXmQ2CTFYDDFArYHjfXm0bwVhc=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
-		RApWs/kCB1HuYuqjAH0CDifi3k4=
+		l29H9Us8uv2CS/eDk3iUOcHbR8w=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -81,7 +81,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ILFiBXTHBqI+nzFBvR5YduIhcl05clkj/8flNOpJNiA=
+			YSjCI1DPCTYghBKpcq+LYe1g98lEMSSJujM2XD8Jdp0=
 			</data>
 		</dict>
 		<key>Headers/isar_flutter_libs-umbrella.h</key>
@@ -95,14 +95,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Jo01XUqOBS09YwsGkh4PjfGxqD1IV3plWRBSnWvoPgw=
+			y1v3oLSrCSx6YLk9KN/Ha+5j2Cr4S1WJtgXQNmVsEpw=
 			</data>
 		</dict>
 		<key>Modules/isar_flutter_libs.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			67Vg+TVZXahf7Cps5sWzdIKZRi0RFNZ5/sSqTEHL3rc=
+			HqZmMMHAch122LRSSIf/H4IA6qR/oR7Va3AGqnHSUQo=
 			</data>
 		</dict>
 		<key>Modules/isar_flutter_libs.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
@@ -116,14 +116,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ivLADjAvWhlE/S9zMbi81H1bZe7pX+h+qRSKJwQvR6M=
+			33JSOvbSnHp0e4QuwTTZ3YgGd6REQE4aya7SR+T4Kn4=
 			</data>
 		</dict>
 		<key>Modules/isar_flutter_libs.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Yv3Z/ZRSK/0H93xzFq20nH9DzP6r/aIZgTbgTE0D9Sw=
+			aDsvPeNv8e1Azsle6X7k4bYF1M1WGvrsR9/6H8o5flY=
 			</data>
 		</dict>
 		<key>Modules/isar_flutter_libs.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -137,21 +137,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			JPqiE1TACvII4OaIekufG8S/O0JhkmkYY8PwWsp4rd4=
+			LpfedOsevr8Gc5ADSN/Lxg8wMIy4KtA0lTruoFJT4vI=
 			</data>
 		</dict>
 		<key>Modules/isar_flutter_libs.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			QO1vRb0M6an/2FVV1bJbIqqWF/nfRyTFS33N3OHRhIo=
+			G/BOaZY6ZdGEzS+Y5PTsPW1+UvWR0ESecVIGvRNNQog=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			4is/PP2Tybn6OmJIKlqLy+REzzcx1euU82QeG3tK4jw=
+			rU1zGdUXyPTv3DH/JidJDd3g1jwbmocS0KMu8bzdG6M=
 			</data>
 		</dict>
 	</dict>

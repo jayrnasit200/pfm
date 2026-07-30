@@ -2,11 +2,11 @@ PODS:
   - Flutter (1.0.0)
   - flutter_secure_storage (6.0.0):
     - Flutter
-  - Google-Mobile-Ads-SDK (11.13.0):
+  - Google-Mobile-Ads-SDK (12.14.0):
     - GoogleUserMessagingPlatform (>= 1.1)
-  - google_mobile_ads (5.3.1):
+  - google_mobile_ads (7.0.0):
     - Flutter
-    - Google-Mobile-Ads-SDK (~> 11.13.0)
+    - Google-Mobile-Ads-SDK (~> 12.14.0)
     - webview_flutter_wkwebview
   - GoogleUserMessagingPlatform (3.1.0)
   - isar_flutter_libs (1.0.0):
@@ -60,8 +60,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
-  Google-Mobile-Ads-SDK: 14f57f2dc33532a24db288897e26494640810407
-  google_mobile_ads: 16ad301354fa6a7ea55770c6254bd4339bf8558b
+  Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
+  google_mobile_ads: df3008bafbe1f2ad6862f87334e560d2f047f902
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
   isar_flutter_libs: 9fc2cfb928c539e1b76c481ba5d143d556d94920
   path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
@@ -69,6 +69,6 @@ SPEC CHECKSUMS:
   video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
-PODFILE CHECKSUM: 4f1c12611da7338d21589c0b2ecd6bd20b109694
+PODFILE CHECKSUM: a57f30d18f102dd3ce366b1d62a55ecbef2158e5
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

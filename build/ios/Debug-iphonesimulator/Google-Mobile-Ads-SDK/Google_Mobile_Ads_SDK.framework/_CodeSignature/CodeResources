@@ -10,19 +10,19 @@
 		</data>
 		<key>Headers/Google_Mobile_Ads_SDK-Swift.h</key>
 		<data>
-		PcvT2srmM7EmAphEvoaMlQphwQ8=
+		+s3AnCWVa6opmzJQ9oOlVbkHPeA=
 		</data>
 		<key>Info.plist</key>
 		<data>
-		n4PtQ/9ZpEMxT+zBQJ4SVLpVbCM=
+		wPjo5nARdGpVW1I3RN2ix341eGo=
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		pBDmYNAUvuOwSRMFnFtWMa0Z3ao=
+		duFz9eMLW19x3Kk3ZPl8eS+Y/jc=
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		NRNUhJI/wTyCr4M9AKIlC0eDAyA=
+		e1/UWUTqLhiHRFO6i7VM2yymQJI=
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -30,11 +30,11 @@
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		N1eBOT3584kCAp2d+cGze/OjOs8=
+		crNajXUFCeP65Rp6vc+YAJ0akAU=
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		pF1E2352WnpzSMu/SJJZefZ1Zew=
+		IEyiYtJmj9UvZ/yq7DpbXd5Y+gU=
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -42,15 +42,15 @@
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		hbXx41O33x5vIm5vmJFFXy08F70=
+		nJxmossesdy/gQ5s37L8mnUbnXg=
 		</data>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		22+u+ZP+0WzmztjWzWJkqWlCsLA=
+		5qV6128CDV3LiKqRA6LROKdPObk=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
-		xN1gFVtykVVuVhgKrjwCPH3NFTY=
+		kVkdQUNmYEXzGh5ej4I52tGcpQE=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -66,21 +66,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			oIdV061zJvE/oqW3SDizFZKhq8tFV55kMKz8LyD1uWM=
+			MYQJFvJpPPqPGjiPmCrU7Xol3LfRE8v4YhCVID7YuF0=
 			</data>
 		</dict>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			9uOcXdeD2+7t1rJKZKWQZAH46OooKw9ALndrN8PADSE=
+			b15vYqMG8gl19eJyQKccVJUMipFzqWYefdcDLFgl8dE=
 			</data>
 		</dict>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			8NvupORYfFgBj1DUTUqkCGnZ1UmPQDiSCcokHsaaq8s=
+			31YDqXbGkeQffliiWGnLmZrKaDQr3awApyF0geGcD7o=
 			</data>
 		</dict>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
@@ -94,14 +94,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			LQJJm89MOzXLZVflnRe1BLY811aieu/fQaeSbT4/M/Y=
+			3W/Aq0rEVd8vE2lXbFocc+/Ta4CDWrKnMNlUSGMlWZQ=
 			</data>
 		</dict>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			x5xvakUek7BkBthf/6t7tpynnHyrNvm35hBRE+Vg2p4=
+			fsotIpnLjE+azTW/4fYbMHC+A6rt7elcv4IppUZodpY=
 			</data>
 		</dict>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -115,21 +115,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			kZetQWIBdfSo6Tsu7yXaIfIC7gbcMKB77eQm1Px7zSA=
+			p+FjJdLFCgpqnO6FCQPAwSKpUCbe4j58T7pPFQfTyLM=
 			</data>
 		</dict>
 		<key>Modules/Google_Mobile_Ads_SDK.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			dHRy/uO0B/FdonQmzyCpQb6+lYduHEowNvWw11iYkOg=
+			UZpSsk2bY3AiFin1xG5sNEwn0reiJKEtOuGX4IcjBw0=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			3hCK9ZEDfV9fuvn8e27RuCNd0ZDhIArVlrcGR5dS1Ns=
+			sjsHog/GuitBNFPL/yFHYZpfQzG3SvM8/xtehRRIMRc=
 			</data>
 		</dict>
 	</dict>

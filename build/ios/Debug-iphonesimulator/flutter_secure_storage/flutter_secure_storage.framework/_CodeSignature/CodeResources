@@ -10,7 +10,7 @@
 		</data>
 		<key>Headers/flutter_secure_storage-Swift.h</key>
 		<data>
-		MqUBx4SYCzplmEg2NJzlYde8ALg=
+		uFVWGZ1zZi7eUbt8UzLr9jYHmj4=
 		</data>
 		<key>Headers/flutter_secure_storage-umbrella.h</key>
 		<data>
@@ -18,15 +18,15 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		yZ9TT4nzWpd3eHkfBAZlD/03m0I=
+		7hzWkiuXE2xMkJKq/9fQIlT12Mw=
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		rqWm7BM4yukAw8YC/Afyx+NmG+4=
+		8GZIgOroy+BcsDtFCmLmkc3icx0=
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		HlvUmGCahHeBGH/MQWUlwY1Oe3E=
+		Jf3GG4Wrkb988tVcALB1CxwYcoA=
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -34,11 +34,11 @@
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		SnPKTHK8+qczKtTc/8K55tsmMFc=
+		Pv4uFdO8CfVxaxiYCYMmiujHz9M=
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		PKbI+x4A/F6rTEZ4Iq+57tCpDAw=
+		yJ4OErHm/A1RdlJvmZxUUxUVSiA=
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -46,19 +46,19 @@
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		FbQSdj1pzlkSmevU0TZLqGC7UE4=
+		TxMx2OZS0V2ABpbwcotfQXb22Ls=
 		</data>
 		<key>Modules/flutter_secure_storage.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		MF0/PWcpiV9bbSYUS5w/r7edOLo=
+		9VHkF+i2UjlNB9IIxQi5QNEvhDU=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
-		Tjcr9f0mlENastA5iOwyNU2WHqM=
+		vx6EIbPRVTdh1zgjnwDQdFuOjTE=
 		</data>
 		<key>flutter_secure_storage.bundle/Info.plist</key>
 		<data>
-		cGYr9M7PzuNsiZwm/j4Um9G9z/8=
+		1FYCQvgxO6bxHwqo0mEKJ6nXb3I=
 		</data>
 		<key>flutter_secure_storage.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -78,7 +78,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			7kwiVFbYqPBhoqT+/kDco9+oeLpBRz0JT3srTusAmwo=
+			PYw3t+S0F58Q3VwvGlQKraMP3tPvmsTjlfS/Biyi3Gk=
 			</data>
 		</dict>
 		<key>Headers/flutter_secure_storage-umbrella.h</key>
@@ -92,14 +92,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			4lUogfRJXg4AZo3ytByh0dU0pAgWk6CEocPADwd6jZs=
+			JlJW2/ojwg71TbG7ku5E0HvZ/iEfeEBzoaLNteY6SFM=
 			</data>
 		</dict>
 		<key>Modules/flutter_secure_storage.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			JHusR4VdrzeOwIWC5rNHifwXhNpM8hJZTj+Vxotmjdg=
+			v2lnekjdgu+nOU/fATWJrROg5YzNAPKtRcmWrQy8aL0=
 			</data>
 		</dict>
 		<key>Modules/flutter_secure_storage.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
@@ -113,14 +113,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			v45rwGQ+nE5ouQxmHj8Kc4qI+tRFMwHOUEZaHqwNCrM=
+			tMsZY6xrgG7NkKn5+EZg9YKcJsNd1asluAtrFN0jjhc=
 			</data>
 		</dict>
 		<key>Modules/flutter_secure_storage.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			sEdFWD8c+gUZcq6lFQWHaR99FnhVaU1CSTMBu+i2eUA=
+			47L0mqIfVgbuidMsldEXa4mtI+5iS+bQwKmPGzzcbDw=
 			</data>
 		</dict>
 		<key>Modules/flutter_secure_storage.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -134,28 +134,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			LsOAAqvqTx3ViHQZDzFWQvZwyre8MQgLrKgJK6s3OwQ=
+			Ks2StUWrj2fwSfzE1S/w66MD8pWJvWHTOP1ORxYc6ec=
 			</data>
 		</dict>
 		<key>Modules/flutter_secure_storage.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			NS7McWoBAXYDcWUehS/BMOhFmWQXYQ6zqBHqUSj7LY4=
+			hjaUmFTIZljvZQzlf/+aPiBAXS11DfiGuSuwKmd0r7M=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			1U2/SV73WPOP2odM+avfw/5Gwkpsj/devNC7UP9KBTM=
+			J07GtPRLgFSAMtJee6BnaoD8Dw/s85YLo2bwmE3D80Q=
 			</data>
 		</dict>
 		<key>flutter_secure_storage.bundle/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			iu3x7sgUlPF4pv/JBj/29/hGxbDLZ5Idv0kq9a6DyiM=
+			yMCppFDzjm9YlGNa54ANU6LWitsSpw9jQ2fgyz1lJzQ=
 			</data>
 		</dict>
 		<key>flutter_secure_storage.bundle/PrivacyInfo.xcprivacy</key>

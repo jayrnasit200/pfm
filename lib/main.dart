@@ -9,14 +9,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 Future<void> main() async {
+  // WidgetsFlutterBinding.ensureInitialized();
+  // await MobileAds.instance.initialize();
+  // try {
+  //   await LocalDb.init();
+  // } catch (e) {
+  //   debugPrint('Local DB init failed: $e');
+  // }
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
-  try {
-    await LocalDb.init();
-  } catch (e) {
-    debugPrint('Local DB init failed: $e');
-  }
-
+  MobileAds.instance.initialize();
   runApp(const MyApp());
 }
 

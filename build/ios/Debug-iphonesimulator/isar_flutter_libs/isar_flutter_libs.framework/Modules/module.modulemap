@@ -7,5 +7,4 @@ framework module isar_flutter_libs {
 
 module isar_flutter_libs.Swift {
   header "isar_flutter_libs-Swift.h"
-  requires objc
 }
